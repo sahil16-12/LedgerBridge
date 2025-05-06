@@ -1,4 +1,5 @@
 package com.codewithus.ledgerbridge.Controller;
+import com.codewithus.ledgerbridge.Dto.InvoiceActionDto;
 import com.codewithus.ledgerbridge.Entity.Invoice;
 import com.codewithus.ledgerbridge.Service.InvoiceService;
 import com.codewithus.ledgerbridge.Dto.InvoiceCreateDto;
@@ -53,4 +54,21 @@ public class InvoiceController {
                 invoiceService.getInvoiceByInvoiceId(invoiceId)
         );
     }
+
+    @PatchMapping("/{invoiceId}/approve")
+    public ResponseEntity<InvoiceDto> approveInvoice(
+            @PathVariable String invoiceId,
+            @Valid @RequestBody InvoiceActionDto action) {
+        InvoiceDto updated = invoiceService.approveInvoice(invoiceId, action);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{invoiceId}/reject")
+    public ResponseEntity<InvoiceDto> rejectInvoice(
+            @PathVariable String invoiceId,
+            @Valid @RequestBody InvoiceActionDto action) {
+        InvoiceDto updated = invoiceService.rejectInvoice(invoiceId, action);
+        return ResponseEntity.ok(updated);
+    }
+
 }
