@@ -21,18 +21,25 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceIdGenerator invoiceIdGenerator;
 
     @Autowired
-    public InvoiceServiceImpl(InvoiceRepository invoiceRepository, InvoiceIdGenerator invoiceIdGenerator) {
+    public InvoiceServiceImpl(InvoiceRepository invoiceRepository,
+                              InvoiceIdGenerator invoiceIdGenerator) {
         this.invoiceRepository = invoiceRepository;
-        this.invoiceIdGenerator = invoiceIdGenerator;
+        this.invoiceIdGenerator  = invoiceIdGenerator;
 
     }
 
+
     @Override
     public InvoiceDto createInvoice(InvoiceCreateDto dto) {
-        String invoiceId = invoiceIdGenerator.generateUniqueInvoiceId(dto.getSupplierusername());
+
+        String invoiceId = invoiceIdGenerator
+                .generateUniqueInvoiceId(dto.getSupplierusername());
         dto.setInvoiceId(invoiceId);
 
-        Invoice saved = invoiceRepository.save(InvoiceMapper.toEntity(dto));
+
+        Invoice saved = invoiceRepository.save(
+                InvoiceMapper.toEntity(dto)
+        );
         return InvoiceMapper.toDto(saved);
     }
 
