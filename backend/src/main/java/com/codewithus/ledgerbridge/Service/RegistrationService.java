@@ -1,11 +1,12 @@
 package com.codewithus.ledgerbridge.Service;
 
+
 import com.codewithus.ledgerbridge.Dto.*;
 import com.codewithus.ledgerbridge.Entity.*;
 import com.codewithus.ledgerbridge.Repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 @Service
 public class RegistrationService {
@@ -26,6 +27,7 @@ public class RegistrationService {
         this.userNameGenerator = userNameGenerator;
     }
 
+
     public String registerSupplier(SupplierRegistrationDto dto) {
         if (supplierRepo.existsByBusinessPan(dto.getBusinessPan())) {
             throw new IllegalArgumentException("PAN already registered");
@@ -45,11 +47,12 @@ public class RegistrationService {
         s.setBankName(dto.getBankName());
         s.setIfsc(dto.getIfsc());
         s.setEntityType(dto.getEntityType());
-        s.setUserName(userNameGenerator.generateUniqueUsername());
+        s.setUserName(userNameGenerator.generateUniqueUsernameForSupplier(dto.getContactName()));
         s.setPassword(encoder.encode(dto.getPassword()));
         supplierRepo.save(s);
         return s.getUserName();
     }
+
 
     public String registerBuyer(BuyerRegistrationDto dto) {
         if (buyerRepo.existsByBuyerPan(dto.getBuyerPan())) {
@@ -71,11 +74,12 @@ public class RegistrationService {
         b.setAccountNumber(dto.getAccountNumber());
         b.setBankName(dto.getBankName());
         b.setIfsc(dto.getIfsc());
-        b.setUserName(userNameGenerator.generateUniqueUsername());
+        b.setUserName(userNameGenerator.generateUniqueUsernameForBuyer(dto.getContactName()));
         b.setPassword(encoder.encode(dto.getPassword()));
         buyerRepo.save(b);
         return b.getUserName();
     }
+
 
     public String registerFinancier(FinancierRegistrationDto dto) {
         if (financierRepo.existsByInstitutionPan(dto.getInstitutionPan())) {
@@ -96,10 +100,11 @@ public class RegistrationService {
         f.setRiskAppetite(dto.getRiskAppetite());
         f.setCreditLimitPerSupplier(dto.getCreditLimitPerSupplier());
         f.setPassword(encoder.encode(dto.getPassword()));
-        f.setUserName(userNameGenerator.generateUniqueUsername());
+        f.setUserName(userNameGenerator.generateUniqueUsernameForFinancier(dto.getContactName()));
         financierRepo.save(f);
         return f.getUserName();
     }
+
 
     public void registerAdmin(AdminRegistrationDto dto) {
         if (adminRepo.existsByUsername(dto.getUsername())) {
