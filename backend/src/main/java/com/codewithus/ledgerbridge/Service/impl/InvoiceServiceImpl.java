@@ -27,6 +27,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     }
 
+    public List<Invoice> getAllApprovedInvoices() {
+        return invoiceRepository.findByStatus(Invoice.InvoiceStatus.APPROVED);
+    }
+
     @Override
     public InvoiceDto createInvoice(InvoiceCreateDto dto) {
         String invoiceId = invoiceIdGenerator.generateUniqueInvoiceId(dto.getSupplierusername());

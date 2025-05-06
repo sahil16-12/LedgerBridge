@@ -20,7 +20,7 @@ public class InvoiceIdGenerator {
         if (username != null && username.startsWith("Supplier_")) {
 
             String[] parts = username.split("_");
-            if (parts.length >= 3) {
+            if (parts.length == 3) {
                 return parts[1];
             }
         }

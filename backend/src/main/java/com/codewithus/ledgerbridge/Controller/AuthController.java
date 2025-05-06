@@ -39,6 +39,8 @@ public class AuthController {
         return ResponseEntity.ok("Admin registered");
     }
 
+
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDto dto) {
         try {

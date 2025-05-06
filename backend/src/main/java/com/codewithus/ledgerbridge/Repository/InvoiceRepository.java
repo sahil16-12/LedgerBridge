@@ -10,4 +10,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     Optional<Invoice> findByInvoiceId(String invoiceId);
     List<Invoice> findBySupplierusernameOrBuyerusername(String supplierusername, String buyerusername);
     boolean existsByInvoiceId(String invoiceNumber);
+    List<Invoice> findByStatus(Invoice.InvoiceStatus status);
+    List<Invoice> findBySupplierusernameAndStatus(String supplierUsername, Invoice.InvoiceStatus status);
+
 }

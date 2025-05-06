@@ -1,4 +1,5 @@
 package com.codewithus.ledgerbridge.Controller;
+import com.codewithus.ledgerbridge.Entity.Invoice;
 import com.codewithus.ledgerbridge.Service.InvoiceService;
 import com.codewithus.ledgerbridge.Dto.InvoiceCreateDto;
 import com.codewithus.ledgerbridge.Dto.InvoiceDto;
@@ -39,6 +40,11 @@ public class InvoiceController {
         );
     }
 
+    @GetMapping("/approved")
+    public ResponseEntity<List<Invoice>> getApprovedInvoices() {
+        List<Invoice> invoices = invoiceService.getAllApprovedInvoices();
+        return ResponseEntity.ok(invoices);
+    }
     // 3) Get one by invoiceId
     @GetMapping("/{invoiceId}")
     public ResponseEntity<InvoiceDto> getByInvoiceId(
