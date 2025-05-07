@@ -1,7 +1,5 @@
 package com.codewithus.ledgerbridge.Controller;
 import com.codewithus.ledgerbridge.Dto.*;
-import com.codewithus.ledgerbridge.Repository.BuyerRepository;
-import com.codewithus.ledgerbridge.Repository.SupplierRepository;
 import com.codewithus.ledgerbridge.Service.*;
 import jakarta.mail.MessagingException;
 import org.springframework.http.ResponseEntity;
@@ -82,7 +80,7 @@ public class AuthController {
         System.out.println("Exists " + exists);
         return ResponseEntity.ok(Map.of("exists", exists));
     }
-    @PostMapping("/verify/buyer")
+    @PostMapping("/verify/Buyer")
     public ResponseEntity<?> verifyBuyer(@Validated @RequestBody VerifyDto dto) {
         String username = regService.verifyBuyer(dto.getActivationToken(), dto.getOtp());
         return ResponseEntity.ok(Map.of(

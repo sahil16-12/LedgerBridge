@@ -300,16 +300,17 @@ const FinancierRegister: React.FC = () => {
     setLoading(true);
     try {
       const { confirmPassword, ...payload } = formData;
-      const res = await api.post('/register/financier', payload);
-      setFormData(prev => ({ ...prev, userName: res.data.username } as any));
-      setRegistrationSuccess(true);
-      setTimeout(() => navigate('/login'), 3000);
+      const res = await api.post("/register/financier", payload);
+      sessionStorage.setItem("activationToken", res.data.activationToken);
+      sessionStorage.setItem("role", "Buyer");
+      alert(res.data.message || "Send Otp!!");
+      navigate("/verify");
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Registration failed');
-    } finally {
+      alert(err.response?.data?.error || "Registration failed");
       setLoading(false);
     }
   };
+
 
   // Step content renderer
   const getStepContent = (step: number) => {

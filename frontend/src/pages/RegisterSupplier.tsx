@@ -440,18 +440,18 @@ const validateCurrentStep = (): boolean => {
     if (!validateCurrentStep()) return;
     setLoading(true);
     try {
-      const { confirmPassword, ...supplierData } = formData;
-      const res = await api.post('/register/supplier', supplierData);
-      setFormData(prev => ({ ...prev, userName: res.data.username } as any));
-      setRegistrationSuccess(true);
-      setLoading(false);
-      setTimeout(() => navigate('/login'), 3000);
+      const { confirmPassword, ...payload } = formData;
+      const res = await api.post("/register/supplier", payload);
+      sessionStorage.setItem("activationToken", res.data.activationToken);
+      sessionStorage.setItem("role", "Buyer");
+      alert(res.data.message || "Send Otp!!");
+      navigate("/verify");
     } catch (err: any) {
-      const msg = err.response?.data?.error || 'Registration failed';
-      alert(msg);
+      alert(err.response?.data?.error || "Registration failed");
       setLoading(false);
     }
   };
+
  
  
   // Render the current step content

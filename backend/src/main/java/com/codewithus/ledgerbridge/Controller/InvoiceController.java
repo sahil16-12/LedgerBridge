@@ -4,6 +4,7 @@ import com.codewithus.ledgerbridge.Entity.Invoice;
 import com.codewithus.ledgerbridge.Service.InvoiceService;
 import com.codewithus.ledgerbridge.Dto.InvoiceCreateDto;
 import com.codewithus.ledgerbridge.Dto.InvoiceDto;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -23,9 +24,12 @@ public class InvoiceController {
     }
 
     // 1) Create
-    @PostMapping("/create")
+    @PostMapping(
+            path = "/create",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<InvoiceDto> createInvoice(
-            @Valid @RequestBody InvoiceCreateDto dto) {
+            @Valid @ModelAttribute InvoiceCreateDto dto) {
         InvoiceDto created = invoiceService.createInvoice(dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
