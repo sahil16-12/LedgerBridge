@@ -10,4 +10,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     boolean existsSupplierByUserName(String userName);
     @Query("SELECT s FROM Supplier s WHERE s.userName = :usernameOrEmail OR s.contactEmail = :usernameOrEmail")
     Supplier findByUserNameOrContactEmail(@Param("usernameOrEmail") String usernameOrEmail);
+
+    boolean existsByMobile(String mobile);
 }

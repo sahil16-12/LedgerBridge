@@ -139,6 +139,11 @@ interface BuyerFormData {
 interface ValidationErrors {
   [key: string]: string;
 }
+// Axios instance
+const api = axios.create({
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/auth`,
+  headers: { 'Content-Type': 'application/json' }
+});
 
 const BuyerRegister: React.FC = () => {
   const navigate = useNavigate();
@@ -166,6 +171,8 @@ const BuyerRegister: React.FC = () => {
   
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [panExists, setPanExists] = useState(false);
+  const [mobileExists, setMobileExists] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingBusinessInfo, setFetchingBusinessInfo] = useState(false);
@@ -183,26 +190,41 @@ const BuyerRegister: React.FC = () => {
   
   // Registration success state
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  
+  const checkPan = async () => {
+    if (PATTERNS.PAN.test(formData.buyerPan)) {
+      try {
+        const { data } = await api.get('/check/buyer/pan', { params: { pan: formData.buyerPan } });
+        setPanExists(data.exists);
+        setErrors(prev => ({
+          ...prev,
+          buyerPan: data.exists ? 'PAN already registered' : ''
+        }));
+      } catch { /* ignore */ }
+    }
+  };
+  const checkMobile = async () => {
+    if (PATTERNS.MOBILE.test(formData.mobile)) {
+      try {
+        const { data } = await api.get('/check/buyer/phone', { params: { phone: formData.mobile } });
+        setMobileExists(data.exists);
+        setErrors(prev => ({
+          ...prev,
+          mobile: data.exists ? 'Mobile already registered' : ''
+        }));
+      } catch { /* ignore */ }
+    }
+  };
+
+  const handlePanBlur = () => checkPan();
+const handleMobileBlur = () => checkMobile();
   // Handle form field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
     if (name) {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-      
-      // Clear error for this field when user types
-      if (errors[name]) {
-        setErrors({
-          ...errors,
-          [name]: ''
-        });
-      }
+      setFormData(prev => ({ ...prev, [name]: value } as any));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
-
   // Fetch business information based on PAN
   const fetchBusinessInfo = async () => {
     if (!formData.buyerPan || !PATTERNS.PAN.test(formData.buyerPan)) {
@@ -246,111 +268,46 @@ const BuyerRegister: React.FC = () => {
   // Validate form data for current step
   const validateCurrentStep = (): boolean => {
     const newErrors: ValidationErrors = {};
-    
     switch (activeStep) {
-      case 0: // Contact Details
-        if (!formData.buyerPan) {
-          newErrors.buyerPan = 'PAN is required';
-        } else if (!PATTERNS.PAN.test(formData.buyerPan)) {
-          newErrors.buyerPan = 'Invalid PAN format (e.g., ABCDE1234F)';
-        }
-        
-        if (!formData.mobile) {
-          newErrors.mobile = 'Mobile number is required';
-        } else if (!PATTERNS.MOBILE.test(formData.mobile)) {
-          newErrors.mobile = 'Invalid Indian mobile number';
-        }
-        
-        if (!formData.companyName) {
-          newErrors.companyName = 'Company name is required';
-        }
-        
-        if (!formData.gstin) {
-          newErrors.gstin = 'GSTIN is required';
-        } else if (!PATTERNS.GSTIN.test(formData.gstin)) {
-          newErrors.gstin = 'Invalid GSTIN format';
-        }
-        
-        if (!formData.registeredAddress) {
-          newErrors.registeredAddress = 'Registered address is required';
-        }
-        
-        if (!mobileVerified) {
-          newErrors.mobile = 'Mobile number verification is required';
-        }
+      case 0:
+        if (!formData.buyerPan) newErrors.buyerPan = 'PAN is required';
+        else if (!PATTERNS.PAN.test(formData.buyerPan)) newErrors.buyerPan = 'Invalid PAN';
+        if (panExists) newErrors.buyerPan = 'PAN already registered';
+        if (!formData.mobile) newErrors.mobile = 'Mobile is required';
+        else if (!PATTERNS.MOBILE.test(formData.mobile)) newErrors.mobile = 'Invalid mobile';
+        if (mobileExists) newErrors.mobile = 'Mobile already registered';
+        if (!formData.companyName) newErrors.companyName = 'Company name is required';
+        if (!formData.gstin) newErrors.gstin = 'GSTIN is required';
+        else if (!PATTERNS.GSTIN.test(formData.gstin)) newErrors.gstin = 'Invalid GSTIN';
+        if (!formData.registeredAddress) newErrors.registeredAddress = 'Address is required';
         break;
-        
-      case 1: // Business Information
-        if (!formData.contactName) {
-          newErrors.contactName = 'Contact name is required';
-        }
-        
-        if (!formData.contactEmail) {
-          newErrors.contactEmail = 'Contact email is required';
-        } else if (!PATTERNS.EMAIL.test(formData.contactEmail)) {
-          newErrors.contactEmail = 'Invalid email format';
-        }
-        
-        if (!formData.contactPhone) {
-          newErrors.contactPhone = 'Contact phone is required';
-        } else if (!PATTERNS.MOBILE.test(formData.contactPhone)) {
-          newErrors.contactPhone = 'Invalid Indian mobile number';
-        }
-        
-        if (!emailVerified) {
-          newErrors.contactEmail = 'Email verification is required';
-        }
+      case 1:
+        if (!formData.contactName) newErrors.contactName = 'Contact name required';
+        if (!formData.contactEmail) newErrors.contactEmail = 'Email required';
+        else if (!PATTERNS.EMAIL.test(formData.contactEmail)) newErrors.contactEmail = 'Invalid email';
+        if (!formData.contactPhone) newErrors.contactPhone = 'Contact phone required';
+        else if (!PATTERNS.MOBILE.test(formData.contactPhone)) newErrors.contactPhone = 'Invalid phone';
         break;
-        
-      case 2: // Financial Details
-        if (!formData.industrySector) {
-          newErrors.industrySector = 'Industry sector is required';
-        }
-        
-        if (!formData.turnoverBracket) {
-          newErrors.turnoverBracket = 'Turnover bracket is required';
-        }
-        
-        if (!formData.desiredCreditLimit) {
-          newErrors.desiredCreditLimit = 'Desired credit limit is required';
-        }
+      case 2:
+        if (!formData.industrySector) newErrors.industrySector = 'Industry required';
+        if (!formData.turnoverBracket) newErrors.turnoverBracket = 'Turnover required';
+        if (!formData.desiredCreditLimit) newErrors.desiredCreditLimit = 'Credit limit required';
         break;
-        
-      case 3: // Bank Details
-        if (!formData.accountNumber) {
-          newErrors.accountNumber = 'Account number is required';
-        } else if (formData.accountNumber.length < 9 || formData.accountNumber.length > 18) {
-          newErrors.accountNumber = 'Account number must be 9-18 digits';
-        }
-        
-        if (!formData.bankName) {
-          newErrors.bankName = 'Bank name is required';
-        }
-        
-        if (!formData.ifsc) {
-          newErrors.ifsc = 'IFSC is required';
-        } else if (!PATTERNS.IFSC.test(formData.ifsc)) {
-          newErrors.ifsc = 'Invalid IFSC (e.g., SBIN0001234)';
-        }
+      case 3:
+        if (!formData.accountNumber) newErrors.accountNumber = 'Account number required';
+        if (!formData.bankName) newErrors.bankName = 'Bank name required';
+        if (!formData.ifsc) newErrors.ifsc = 'IFSC required';
+        else if (!PATTERNS.IFSC.test(formData.ifsc)) newErrors.ifsc = 'Invalid IFSC';
         break;
-        
-      case 4: // Security
-        if (!formData.password) {
-          newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
-          newErrors.password = 'Password must be at least 8 characters';
-        }
-        
-        if (formData.password !== formData.confirmPassword) {
-          newErrors.confirmPassword = 'Passwords do not match';
-        }
+      case 4:
+        if (!formData.password) newErrors.password = 'Password required';
+        else if (formData.password.length < 8) newErrors.password = 'Minimum 8 chars';
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords must match';
         break;
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
   // Handle next button click
   const handleNext = () => {
     if (validateCurrentStep()) {
@@ -446,33 +403,18 @@ const BuyerRegister: React.FC = () => {
   
   // Handle form submission
   const handleSubmit = async () => {
-    if (validateCurrentStep()) {
-      setLoading(true);
-      
-      try {
-        // This would be an actual API call to register the buyer
-        // For demo, we'll simulate it
-        // Remove confirmPassword from the data being sent to the API
-        const { confirmPassword, ...buyerData } = formData;
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        console.log('Buyer registration data:', buyerData);
-        
-        // Show success message
-        setRegistrationSuccess(true);
-        setLoading(false);
-        
-        // Navigate to login page after 3 seconds
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
-      } catch (error) {
-        console.error('Error registering buyer:', error);
-        setLoading(false);
-        // Handle error appropriately
-      }
+    if (!validateCurrentStep()) return;
+    setLoading(true);
+    try {
+      const { confirmPassword, ...payload } = formData;
+      const res = await api.post('/register/buyer', payload);
+      setFormData(prev => ({ ...prev, userName: res.data.username } as any));
+      setRegistrationSuccess(true);
+      setLoading(false);
+      setTimeout(() => navigate('/login'), 3000);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Registration failed');
+      setLoading(false);
     }
   };
   
@@ -497,6 +439,7 @@ const BuyerRegister: React.FC = () => {
                 name="buyerPan"
                 label="Business PAN*"
                 value={formData.buyerPan}
+                onBlur={handlePanBlur} 
                 onChange={handleChange}
                 error={!!errors.buyerPan}
                 helperText={errors.buyerPan}
@@ -523,6 +466,7 @@ const BuyerRegister: React.FC = () => {
                 label="Mobile Number*"
                 value={formData.mobile}
                 onChange={handleChange}
+                onBlur={handleMobileBlur} 
                 error={!!errors.mobile}
                 helperText={errors.mobile}
                 InputProps={{

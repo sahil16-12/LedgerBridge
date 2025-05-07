@@ -13,4 +13,5 @@ public interface BuyerRepository extends JpaRepository<Buyer, Long> {
     boolean existsByBuyerPan(String buyerPan);
     @Query("SELECT b FROM Buyer b WHERE b.userName = :usernameOrEmail OR b.contactEmail = :usernameOrEmail")
     Buyer findByUserNameOrContactEmail(@Param("usernameOrEmail") String usernameOrEmail);
+    boolean existsByMobile(String mobile);
 }

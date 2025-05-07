@@ -132,7 +132,10 @@ interface SupplierFormData {
 interface ValidationErrors {
   [key: string]: string;
 }
-
+const api = axios.create({
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/auth`,
+  headers: { 'Content-Type': 'application/json' }
+});
 const SupplierRegister: React.FC = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
@@ -157,6 +160,8 @@ const SupplierRegister: React.FC = () => {
   });
   
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [panExists, setPanExists] = useState(false);
+  const [mobileExists, setMobileExists] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -179,22 +184,51 @@ const SupplierRegister: React.FC = () => {
   // Handle form field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
-    if (name) {
-      setFormData({
-        ...formData,
-        [name]: value
+    if (!name) return;
+    setFormData(prev => ({ ...prev, [name]: value } as any));
+    setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+  // Validate PAN existence
+  const checkPan = async () => {
+    if (!PATTERNS.PAN.test(formData.businessPan)) return;
+    try {
+      const { data } = await api.get('/check/supplier/pan', {
+        params: { pan: formData.businessPan }
       });
-      
-      // Clear error for this field when user types
-      if (errors[name]) {
-        setErrors({
-          ...errors,
-          [name]: ''
-        });
+      if (data.exists) {
+        setPanExists(true);
+        setErrors(prev => ({ ...prev, businessPan: 'PAN already registered' }));
+      } else {
+        setPanExists(false);
+        setErrors(prev => ({ ...prev, businessPan: '' }));
       }
+    } catch {
+      // ignore
     }
   };
 
+  // Validate mobile existence
+  const checkMobile = async () => {
+    if (!PATTERNS.MOBILE.test(formData.mobile)) return;
+    try {
+      const { data } = await api.get('/check/supplier/phone', {
+        params: { phone: formData.mobile }
+      });
+      if (data.exists) {
+        setMobileExists(true);
+        setErrors(prev => ({ ...prev, mobile: 'Mobile number already registered' }));
+      } else {
+        setMobileExists(false);
+        setErrors(prev => ({ ...prev, mobile: '' }));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  // Handle blur events
+  const handlePanBlur = () => checkPan();
+  const handleMobileBlur = () => checkMobile();
   // Fetch business information based on PAN
   const fetchBusinessInfo = async () => {
     if (!formData.businessPan || !PATTERNS.PAN.test(formData.businessPan)) {
@@ -236,106 +270,57 @@ const SupplierRegister: React.FC = () => {
   };
 
   // Validate form data for current step
-  const validateCurrentStep = (): boolean => {
+const validateCurrentStep = (): boolean => {
     const newErrors: ValidationErrors = {};
-    
+
     switch (activeStep) {
-      case 0: // Business Information
-        if (!formData.businessPan) {
-          newErrors.businessPan = 'PAN is required';
-        } else if (!PATTERNS.PAN.test(formData.businessPan)) {
-          newErrors.businessPan = 'Invalid PAN format (e.g., ABCDE1234F)';
-        }
-        
-        if (!formData.mobile) {
-          newErrors.mobile = 'Mobile number is required';
-        } else if (!PATTERNS.MOBILE.test(formData.mobile)) {
-          newErrors.mobile = 'Invalid Indian mobile number';
-        }
-        
-        if (!formData.businessName) {
-          newErrors.businessName = 'Business name is required';
-        }
-        
-        if (!formData.gstin) {
-          newErrors.gstin = 'GSTIN is required';
-        } else if (!PATTERNS.GSTIN.test(formData.gstin)) {
-          newErrors.gstin = 'Invalid GSTIN format';
-        }
-        
-        if (!formData.registeredAddress) {
-          newErrors.registeredAddress = 'Registered address is required';
-        }
-        
-        if (!mobileVerified) {
-          newErrors.mobile = 'Mobile number verification is required';
-        }
+      case 0:
+        if (!formData.businessPan) newErrors.businessPan = 'PAN is required';
+        else if (!PATTERNS.PAN.test(formData.businessPan)) newErrors.businessPan = 'Invalid PAN';
+        if (panExists) newErrors.businessPan = 'PAN already registered';
+
+        if (!formData.mobile) newErrors.mobile = 'Mobile is required';
+        else if (!PATTERNS.MOBILE.test(formData.mobile)) newErrors.mobile = 'Invalid mobile';
+        if (mobileExists) newErrors.mobile = 'Mobile number already registered';
+
+        if (!formData.businessName) newErrors.businessName = 'Business name is required';
+        if (!formData.gstin) newErrors.gstin = 'GSTIN is required';
+        else if (!PATTERNS.GSTIN.test(formData.gstin)) newErrors.gstin = 'Invalid GSTIN';
+        if (!formData.registeredAddress) newErrors.registeredAddress = 'Address is required';
         break;
-        
-      case 1: // Contact Details
-        if (!formData.contactName) {
-          newErrors.contactName = 'Contact name is required';
-        }
-        
-        if (!formData.contactEmail) {
-          newErrors.contactEmail = 'Contact email is required';
-        } else if (!PATTERNS.EMAIL.test(formData.contactEmail)) {
-          newErrors.contactEmail = 'Invalid email format';
-        }
-        
+
+      case 1:
+        if (!formData.contactName) newErrors.contactName = 'Contact name is required';
+        if (!formData.contactEmail) newErrors.contactEmail = 'Email is required';
+        else if (!PATTERNS.EMAIL.test(formData.contactEmail)) newErrors.contactEmail = 'Invalid email';
         if (formData.alternatePhone && !PATTERNS.MOBILE.test(formData.alternatePhone)) {
-          newErrors.alternatePhone = 'Invalid Indian phone number';
-        }
-        
-        if (!emailVerified) {
-          newErrors.contactEmail = 'Email verification is required';
+          newErrors.alternatePhone = 'Invalid alternate phone';
         }
         break;
-        
-      case 2: // Company Profile
-        if (!formData.entityType) {
-          newErrors.entityType = 'Entity type is required';
-        }
-        
-        if (!formData.industrySector) {
-          newErrors.industrySector = 'Industry sector is required';
-        }
+
+      case 2:
+        if (!formData.entityType) newErrors.entityType = 'Entity type is required';
+        if (!formData.industrySector) newErrors.industrySector = 'Industry sector is required';
         break;
-        
-      case 3: // Bank Settlement
-        if (!formData.accountNumber) {
-          newErrors.accountNumber = 'Account number is required';
-        } else if (formData.accountNumber.length < 9 || formData.accountNumber.length > 18) {
-          newErrors.accountNumber = 'Account number must be 9-18 digits';
-        }
-        
-        if (!formData.bankName) {
-          newErrors.bankName = 'Bank name is required';
-        }
-        
-        if (!formData.ifsc) {
-          newErrors.ifsc = 'IFSC is required';
-        } else if (!PATTERNS.IFSC.test(formData.ifsc)) {
-          newErrors.ifsc = 'Invalid IFSC (e.g., SBIN0001234)';
-        }
+
+      case 3:
+        if (!formData.accountNumber) newErrors.accountNumber = 'Account number is required';
+        if (!formData.bankName) newErrors.bankName = 'Bank name is required';
+        if (!formData.ifsc) newErrors.ifsc = 'IFSC is required';
+        else if (!PATTERNS.IFSC.test(formData.ifsc)) newErrors.ifsc = 'Invalid IFSC';
         break;
-        
-      case 4: // Security
-        if (!formData.password) {
-          newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
-          newErrors.password = 'Password must be at least 8 characters';
-        }
-        
-        if (formData.password !== formData.confirmPassword) {
-          newErrors.confirmPassword = 'Passwords do not match';
-        }
+
+      case 4:
+        if (!formData.password) newErrors.password = 'Password is required';
+        else if (formData.password.length < 8) newErrors.password = 'Password too short';
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords must match';
         break;
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   
   // Handle next button click
   const handleNext = () => {
@@ -432,35 +417,22 @@ const SupplierRegister: React.FC = () => {
   
   // Handle form submission
   const handleSubmit = async () => {
-    if (validateCurrentStep()) {
-      setLoading(true);
-      
-      try {
-        // This would be an actual API call to register the supplier
-        // For demo, we'll simulate it
-        // Remove confirmPassword from the data being sent to the API
-        const { confirmPassword, ...supplierData } = formData;
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        console.log('Supplier registration data:', supplierData);
-        
-        // Show success message
-        setRegistrationSuccess(true);
-        setLoading(false);
-        
-        // Navigate to login page after 3 seconds
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
-      } catch (error) {
-        console.error('Error registering supplier:', error);
-        setLoading(false);
-        // Handle error appropriately
-      }
+    if (!validateCurrentStep()) return;
+    setLoading(true);
+    try {
+      const { confirmPassword, ...supplierData } = formData;
+      const res = await api.post('/register/supplier', supplierData);
+      setFormData(prev => ({ ...prev, userName: res.data.username } as any));
+      setRegistrationSuccess(true);
+      setLoading(false);
+      setTimeout(() => navigate('/login'), 3000);
+    } catch (err: any) {
+      const msg = err.response?.data?.error || 'Registration failed';
+      alert(msg);
+      setLoading(false);
     }
   };
+  
   
   // Render the current step content
   const getStepContent = (step: number) => {
@@ -483,6 +455,7 @@ const SupplierRegister: React.FC = () => {
                 name="businessPan"
                 label="Business PAN*"
                 value={formData.businessPan}
+                onBlur={handlePanBlur}
                 onChange={handleChange}
                 error={!!errors.businessPan}
                 helperText={errors.businessPan}
@@ -508,6 +481,7 @@ const SupplierRegister: React.FC = () => {
                 name="mobile"
                 label="Mobile Number*"
                 value={formData.mobile}
+                onBlur={handleMobileBlur}
                 onChange={handleChange}
                 error={!!errors.mobile}
                 helperText={errors.mobile}
