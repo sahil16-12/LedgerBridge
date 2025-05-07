@@ -109,7 +109,17 @@ public class AuthController {
                 "username", username
         ));
     }
+    @GetMapping("/check/financier/pan")
+    public ResponseEntity<?> checkFinancierPan(@RequestParam String pan) {
+        boolean exists = regService.isFinancierPanExists(pan);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
 
+    @GetMapping("/check/financier/phone")
+    public ResponseEntity<?> checkFinancierPhone(@RequestParam String phone) {
+        boolean exists = regService.isFinancierMobileExists(phone);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
 
     @PostMapping("/register/admin")
     public ResponseEntity<?> adminSignup(@RequestBody AdminRegistrationDto dto) {

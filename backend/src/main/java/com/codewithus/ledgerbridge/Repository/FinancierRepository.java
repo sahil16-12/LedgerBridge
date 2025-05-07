@@ -15,4 +15,5 @@ public interface FinancierRepository extends JpaRepository<Financier, Long> {
     @Query("SELECT f FROM Financier f WHERE f.userName = :usernameOrEmail OR f.contactEmail = :usernameOrEmail")
     Financier findByUserNameOrContactEmail(@Param("usernameOrEmail") String usernameOrEmail);
 
+    boolean existsByMobile(String phone);
 }

@@ -158,4 +158,12 @@ public class RegistrationService {
     public boolean isBuyerMobileExists(String mobile) {
         return buyerRepo.existsByMobile(mobile);
     }
+
+    public boolean isFinancierPanExists(String pan) {
+        return financierRepo.existsByInstitutionPan(pan);
+    }
+
+    public boolean isFinancierMobileExists(String phone) {
+        return financierRepo.existsByMobile(phone);
+    }
 }
