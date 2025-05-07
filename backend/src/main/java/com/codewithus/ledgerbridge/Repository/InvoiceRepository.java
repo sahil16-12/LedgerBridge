@@ -12,5 +12,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     boolean existsByInvoiceId(String invoiceNumber);
     List<Invoice> findByStatus(Invoice.InvoiceStatus status);
     List<Invoice> findBySupplierusernameAndStatus(String supplierUsername, Invoice.InvoiceStatus status);
+    List<Invoice> findTop10BySupplierusernameOrderByUploadDateDesc(String supplierusername);
 
 }

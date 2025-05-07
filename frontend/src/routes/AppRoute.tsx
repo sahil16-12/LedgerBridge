@@ -8,6 +8,7 @@ import UploadInvoice from '../pages/seller/UploadInvoice';
 import BidsAndOffers from '../pages/seller/BidsAndOffers';
 import FinancierRegister from '../pages/RegisterFinancier';
 import VerificationPage from '../pages/VerificationPage';
+import LoginPage from '../pages/LoginPage';
 
 export const AppRoute = () => (
   <Routes>
@@ -16,6 +17,7 @@ export const AppRoute = () => (
     <Route path="/register/buyer" element={<BuyerRegister />} />
     <Route path="/register/financier" element={<FinancierRegister />} />
     <Route path="/verify" element={<VerificationPage />} />
+    <Route path="/login" element={<LoginPage />} />
     {/* Seller Routes */}
     <Route path="/seller" element={<SellerLayout />}>
       <Route path="dashboard" element={<SellerDashboard />} />

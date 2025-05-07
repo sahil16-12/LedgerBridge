@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FileUp, X, Upload, File } from 'lucide-react';
 import axios from 'axios';
+import { useUserContext } from '../../context/UserContext';
 
 interface InvoiceFormData {
   supplierusername: string;
@@ -21,7 +22,7 @@ const UploadInvoice = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
+  const { user } = useUserContext();
   const [formData, setFormData] = useState<InvoiceFormData>({
     supplierusername: '',
     invoiceNumber: '',
@@ -36,6 +37,8 @@ const UploadInvoice = () => {
   // Buyers list state
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   useEffect(() => {
+    console.log('User');
+    console.log(user);
     axios
       .get<Buyer[]>(`${import.meta.env.VITE_API_BASE_URL}/api/buyers`)
       .then(res => setBuyers(res.data))
@@ -71,7 +74,7 @@ const UploadInvoice = () => {
     try {
 
       const payload = new FormData();
-      payload.append('supplierusername', 'Supplier_shahil_478587');  
+      payload.append('supplierusername', user?.userName ?? "Supplier_shahil_478587");  
       payload.append('buyerusername', formData.buyerusername);  
       payload.append('amount', formData.amount);
       payload.append('dueDate', formData.dueDate);

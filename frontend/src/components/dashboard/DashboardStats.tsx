@@ -2,7 +2,7 @@ import { ArrowUpRight, TrendingUp, Clock, DollarSign } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  value?: string | number;
   subValue?: string;
   icon?: React.ReactNode;
 }
@@ -38,18 +38,16 @@ const DashboardStats = () => {
         subValue="Last month: 6.5%"
         icon={<TrendingUp size={20} className="text-[#006A71]" />}
       />
-      <StatCard
-        title="Awaiting Bids"
-        value="₹ 0.00"
-        subValue="Count: 0"
-        icon={<Clock size={20} className="text-[#006A71]" />}
-      />
-      <StatCard
-        title="Pending Acceptance"
-        value="₹ 0.00"
-        subValue="Count: 0"
-        icon={<Clock size={20} className="text-[#006A71]" />}
-      />
+<StatCard
+  title="Awaiting Bids"
+  value={<span className="text-4xl font-bold text-gray-800">0</span>}
+  icon={<Clock size={20} className="text-[#006A71]" />}
+/>
+<StatCard
+  title="Pending Acceptance"
+  value={<span className="text-4xl font-bold text-gray-800">0</span>}
+  icon={<Clock size={20} className="text-[#006A71]" />}
+/>
     </div>
   );
 };

@@ -1,11 +1,17 @@
 package com.codewithus.ledgerbridge.Controller;
 import com.codewithus.ledgerbridge.Dto.*;
+import com.codewithus.ledgerbridge.Entity.Admin;
+import com.codewithus.ledgerbridge.Entity.Buyer;
+import com.codewithus.ledgerbridge.Entity.Financier;
+import com.codewithus.ledgerbridge.Entity.Supplier;
 import com.codewithus.ledgerbridge.Service.*;
 import jakarta.mail.MessagingException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -131,10 +137,33 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginDto dto) {
         try {
             Object user = loginService.authenticate(dto);
-            return ResponseEntity.ok(user);
+            System.out.println(user);
+            String role;
+
+
+            if (user instanceof Admin) {
+                role = "ADMIN";
+            } else if (user instanceof Buyer) {
+                role = "BUYER";
+            } else if (user instanceof Supplier) {
+                role = "SUPPLIER";
+            } else if (user instanceof Financier) {
+                role = "FINANCIER";
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Unknown user type");
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("role", role);
+            response.put("user", user);
+
+            return ResponseEntity.ok(response);
+
+
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-    }
 
+    }
 }

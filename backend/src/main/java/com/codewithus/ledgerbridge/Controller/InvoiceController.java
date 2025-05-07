@@ -1,5 +1,6 @@
 package com.codewithus.ledgerbridge.Controller;
 import com.codewithus.ledgerbridge.Dto.InvoiceActionDto;
+import com.codewithus.ledgerbridge.Dto.InvoiceRecentDto;
 import com.codewithus.ledgerbridge.Entity.Invoice;
 import com.codewithus.ledgerbridge.Service.InvoiceService;
 import com.codewithus.ledgerbridge.Dto.InvoiceCreateDto;
@@ -73,6 +74,12 @@ public class InvoiceController {
             @Valid @RequestBody InvoiceActionDto action) {
         InvoiceDto updated = invoiceService.rejectInvoice(invoiceId, action);
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/recent/{supplierUsername}")
+    public List<InvoiceRecentDto> getRecent(@PathVariable String supplierUsername) {
+        System.out.println("inside controller");
+        return invoiceService.getRecentInvoices(supplierUsername);
     }
 
 }
