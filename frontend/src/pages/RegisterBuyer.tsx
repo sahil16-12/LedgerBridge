@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Stepper, 
-  Step, 
-  StepLabel, 
-  Button, 
-  TextField, 
-  InputAdornment, 
+import {
+  Container,
+  Typography,
+  Box,
+  Stepper,
+  Step,
+  StepLabel,
+  Button,
+  TextField,
+  InputAdornment,
   IconButton,
   MenuItem,
   FormControl,
@@ -27,7 +27,9 @@ import {
   Link,
 } from '@mui/material';
 
+
 import { GridLegacy as Grid } from '@mui/material';
+
 
 import {
   Visibility,
@@ -43,6 +45,7 @@ import {
   Assessment
 } from '@mui/icons-material';
 
+
 // Validation regex patterns
 const PATTERNS = {
   PAN: /[A-Z]{5}[0-9]{4}[A-Z]{1}/,
@@ -51,6 +54,7 @@ const PATTERNS = {
   IFSC: /^[A-Z]{4}0[A-Z0-9]{6}$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 };
+
 
 // Industry sectors
 const INDUSTRY_SECTORS = [
@@ -73,6 +77,7 @@ const INDUSTRY_SECTORS = [
   "Others"
 ];
 
+
 // Turnover brackets
 const TURNOVER_BRACKETS = [
   "Less than ₹10 Crore",
@@ -82,6 +87,7 @@ const TURNOVER_BRACKETS = [
   "More than ₹500 Crore"
 ];
 
+
 // Credit limit options
 const CREDIT_LIMIT_OPTIONS = [
   "Up to ₹10 Lakh",
@@ -90,6 +96,7 @@ const CREDIT_LIMIT_OPTIONS = [
   "₹1 Crore - ₹5 Crore",
   "More than ₹5 Crore"
 ];
+
 
 // Steps for the stepper
 const steps = [
@@ -115,6 +122,7 @@ const steps = [
   }
 ];
 
+
 interface BuyerFormData {
   userName: string | null;
   buyerPan: string;
@@ -136,6 +144,7 @@ interface BuyerFormData {
   confirmPassword: string;
 }
 
+
 interface ValidationErrors {
   [key: string]: string;
 }
@@ -144,6 +153,7 @@ const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/auth`,
   headers: { 'Content-Type': 'application/json' }
 });
+
 
 const BuyerRegister: React.FC = () => {
   const navigate = useNavigate();
@@ -168,7 +178,7 @@ const BuyerRegister: React.FC = () => {
     password: '',
     confirmPassword: ''
   });
-  
+ 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [panExists, setPanExists] = useState(false);
@@ -176,7 +186,7 @@ const BuyerRegister: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingBusinessInfo, setFetchingBusinessInfo] = useState(false);
-  
+ 
   // OTP verification states
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
   const [mobileOtp, setMobileOtp] = useState('');
@@ -187,7 +197,7 @@ const BuyerRegister: React.FC = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [otpType, setOtpType] = useState<'mobile' | 'email'>('mobile');
-  
+ 
   // Registration success state
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const checkPan = async () => {
@@ -215,6 +225,7 @@ const BuyerRegister: React.FC = () => {
     }
   };
 
+
   const handlePanBlur = () => checkPan();
 const handleMobileBlur = () => checkMobile();
   // Handle form field changes
@@ -234,9 +245,9 @@ const handleMobileBlur = () => checkMobile();
       });
       return;
     }
-    
+   
     setFetchingBusinessInfo(true);
-    
+   
     try {
       // This would be a real API call to fetch business details based on PAN
       // For demo, we'll simulate it
@@ -245,15 +256,15 @@ const handleMobileBlur = () => checkMobile();
         gstin: "27AAAAA0000A1Z5",
         registeredAddress: "456 Corporate Plaza, Financial District, Mumbai, Maharashtra - 400051"
       };
-      
+     
       // Simulating API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+     
       setFormData({
         ...formData,
         ...mockResponse
       });
-      
+     
       setFetchingBusinessInfo(false);
     } catch (error) {
       console.error("Error fetching business info:", error);
@@ -264,6 +275,7 @@ const handleMobileBlur = () => checkMobile();
       setFetchingBusinessInfo(false);
     }
   };
+
 
   // Validate form data for current step
   const validateCurrentStep = (): boolean => {
@@ -314,17 +326,17 @@ const handleMobileBlur = () => checkMobile();
       setActiveStep((prevStep) => prevStep + 1);
     }
   };
-  
+ 
   // Handle back button click
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
-  
+ 
   // Send OTP to mobile or email
   const sendOtp = async (type: 'mobile' | 'email') => {
     setOtpType(type);
     setSendingOtp(true);
-    
+   
     try {
       // Validate contact information first
       if (type === 'mobile' && !PATTERNS.MOBILE.test(formData.mobile)) {
@@ -335,7 +347,7 @@ const handleMobileBlur = () => checkMobile();
         setSendingOtp(false);
         return;
       }
-      
+     
       if (type === 'email' && !PATTERNS.EMAIL.test(formData.contactEmail)) {
         setErrors({
           ...errors,
@@ -344,21 +356,21 @@ const handleMobileBlur = () => checkMobile();
         setSendingOtp(false);
         return;
       }
-      
+     
       // This would be an actual API call to send OTP
       // For demo, we'll simulate it
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+     
       // Clear any previous OTP errors
       setOtpError('');
-      
+     
       // Reset OTP values
       if (type === 'mobile') {
         setMobileOtp('');
       } else {
         setEmailOtp('');
       }
-      
+     
       setOtpDialogOpen(true);
       setSendingOtp(false);
     } catch (error) {
@@ -367,31 +379,31 @@ const handleMobileBlur = () => checkMobile();
       setSendingOtp(false);
     }
   };
-  
+ 
   // Verify OTP
   const verifyOtp = async () => {
     setVerifyingOtp(true);
-    
+   
     try {
       // This would be an actual API call to verify OTP
       // For demo, we'll simulate it with a fixed OTP "123456"
       const otp = otpType === 'mobile' ? mobileOtp : emailOtp;
-      
+     
       if (otp !== '123456') {
         setOtpError('Invalid OTP. Please try again.');
         setVerifyingOtp(false);
         return;
       }
-      
+     
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+     
       if (otpType === 'mobile') {
         setMobileVerified(true);
       } else {
         setEmailVerified(true);
       }
-      
+     
       setOtpDialogOpen(false);
       setVerifyingOtp(false);
     } catch (error) {
@@ -400,7 +412,7 @@ const handleMobileBlur = () => checkMobile();
       setVerifyingOtp(false);
     }
   };
-  
+ 
   // Handle form submission
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
@@ -417,7 +429,7 @@ const handleMobileBlur = () => checkMobile();
       setLoading(false);
     }
   };
-  
+ 
   // Render the current step content
   const getStepContent = (step: number) => {
     switch (step) {
@@ -432,23 +444,23 @@ const handleMobileBlur = () => checkMobile();
                 Please enter your business PAN and basic information
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 name="buyerPan"
                 label="Business PAN*"
                 value={formData.buyerPan}
-                onBlur={handlePanBlur} 
+                onBlur={handlePanBlur}
                 onChange={handleChange}
                 error={!!errors.buyerPan}
                 helperText={errors.buyerPan}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button 
-                        size="small" 
-                        onClick={fetchBusinessInfo} 
+                      <Button
+                        size="small"
+                        onClick={fetchBusinessInfo}
                         disabled={fetchingBusinessInfo}
                       >
                         {fetchingBusinessInfo ? <CircularProgress size={20} /> : 'Fetch Info'}
@@ -458,7 +470,7 @@ const handleMobileBlur = () => checkMobile();
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -466,16 +478,16 @@ const handleMobileBlur = () => checkMobile();
                 label="Mobile Number*"
                 value={formData.mobile}
                 onChange={handleChange}
-                onBlur={handleMobileBlur} 
+                onBlur={handleMobileBlur}
                 error={!!errors.mobile}
                 helperText={errors.mobile}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">+91</InputAdornment>,
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button 
-                        size="small" 
-                        onClick={() => sendOtp('mobile')} 
+                      <Button
+                        size="small"
+                        onClick={() => sendOtp('mobile')}
                         disabled={sendingOtp || mobileVerified}
                         color={mobileVerified ? "success" : "primary"}
                       >
@@ -495,7 +507,7 @@ const handleMobileBlur = () => checkMobile();
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -508,7 +520,7 @@ const handleMobileBlur = () => checkMobile();
                 disabled={fetchingBusinessInfo}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -521,7 +533,7 @@ const handleMobileBlur = () => checkMobile();
                 disabled={fetchingBusinessInfo}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -538,7 +550,7 @@ const handleMobileBlur = () => checkMobile();
             </Grid>
           </Grid>
         );
-        
+       
       case 1:
         return (
           <Grid container spacing={3}>
@@ -550,7 +562,7 @@ const handleMobileBlur = () => checkMobile();
                 Please provide authorized contact person details
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -562,7 +574,7 @@ const handleMobileBlur = () => checkMobile();
                 helperText={errors.contactName}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -574,7 +586,7 @@ const handleMobileBlur = () => checkMobile();
                 helperText={errors.contactDesignation}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -587,9 +599,9 @@ const handleMobileBlur = () => checkMobile();
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button 
-                        size="small" 
-                        onClick={() => sendOtp('email')} 
+                      <Button
+                        size="small"
+                        onClick={() => sendOtp('email')}
                         disabled={sendingOtp || emailVerified}
                         color={emailVerified ? "success" : "primary"}
                       >
@@ -609,7 +621,7 @@ const handleMobileBlur = () => checkMobile();
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -626,7 +638,7 @@ const handleMobileBlur = () => checkMobile();
             </Grid>
           </Grid>
         );
-        
+       
       case 2:
         return (
           <Grid container spacing={3}>
@@ -638,7 +650,7 @@ const handleMobileBlur = () => checkMobile();
                 Please provide your company's financial information
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!errors.industrySector}>
                 <InputLabel>Industry Sector*</InputLabel>
@@ -657,7 +669,7 @@ const handleMobileBlur = () => checkMobile();
                 {errors.industrySector && <FormHelperText>{errors.industrySector}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!errors.turnoverBracket}>
                 <InputLabel>Annual Turnover*</InputLabel>
@@ -676,7 +688,7 @@ const handleMobileBlur = () => checkMobile();
                 {errors.turnoverBracket && <FormHelperText>{errors.turnoverBracket}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!errors.desiredCreditLimit}>
                 <InputLabel>Desired Credit Limit*</InputLabel>
@@ -695,7 +707,7 @@ const handleMobileBlur = () => checkMobile();
                 {errors.desiredCreditLimit && <FormHelperText>{errors.desiredCreditLimit}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+           
             <Grid item xs={12}>
               <Typography variant="body2" color="textSecondary">
                 Note: The desired credit limit is subject to approval based on your company's financials.
@@ -703,7 +715,7 @@ const handleMobileBlur = () => checkMobile();
             </Grid>
           </Grid>
         );
-        
+       
       case 3:
         return (
           <Grid container spacing={3}>
@@ -715,7 +727,7 @@ const handleMobileBlur = () => checkMobile();
                 Please provide your bank account details
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -727,7 +739,7 @@ const handleMobileBlur = () => checkMobile();
                 helperText={errors.accountNumber}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -739,7 +751,7 @@ const handleMobileBlur = () => checkMobile();
                 helperText={errors.bankName}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -751,7 +763,7 @@ const handleMobileBlur = () => checkMobile();
                 helperText={errors.ifsc}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <Typography variant="body2" color="textSecondary">
                 Note: Please ensure that the bank account is registered in the name of your business.
@@ -759,7 +771,7 @@ const handleMobileBlur = () => checkMobile();
             </Grid>
           </Grid>
         );
-        
+       
       case 4:
         return (
           <Grid container spacing={3}>
@@ -771,7 +783,7 @@ const handleMobileBlur = () => checkMobile();
                 Create a secure password for your account
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -797,7 +809,7 @@ const handleMobileBlur = () => checkMobile();
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -823,7 +835,7 @@ const handleMobileBlur = () => checkMobile();
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <Typography variant="body2" color="textSecondary">
                 By registering, you agree to our <Link href="#">Terms of Service</Link> and <Link href="#">Privacy Policy</Link>.
@@ -831,12 +843,12 @@ const handleMobileBlur = () => checkMobile();
             </Grid>
           </Grid>
         );
-        
+       
       default:
         return <Typography>Unknown step</Typography>;
     }
   };
-  
+ 
   // OTP Dialog
   const renderOtpDialog = () => {
     return (
@@ -897,7 +909,7 @@ const handleMobileBlur = () => checkMobile();
       </Dialog>
     );
   };
-  
+ 
   // Success dialog
   const renderSuccessDialog = () => {
     return (
@@ -921,7 +933,7 @@ const handleMobileBlur = () => checkMobile();
       </Dialog>
     );
   };
-  
+ 
   return (
     <Container maxWidth="md" sx={{ my: 4 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -931,7 +943,7 @@ const handleMobileBlur = () => checkMobile();
             Buyer Registration
           </Typography>
         </Box>
-        
+       
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
           {steps.map((step, index) => (
             <Step key={step.label}>
@@ -956,7 +968,7 @@ const handleMobileBlur = () => checkMobile();
             </Step>
           ))}
         </Stepper>
-        
+       
         <Box>
           {activeStep === steps.length ? (
             <Box textAlign="center" py={3}>
@@ -1001,7 +1013,7 @@ const handleMobileBlur = () => checkMobile();
           )}
         </Box>
       </Paper>
-      
+     
       <Box mt={3} textAlign="center">
         <Typography variant="body2" color="textSecondary">
           Already have an account?{' '}
@@ -1014,11 +1026,12 @@ const handleMobileBlur = () => checkMobile();
           </Link>
         </Typography>
       </Box>
-      
+     
       {renderOtpDialog()}
       {renderSuccessDialog()}
     </Container>
   );
 };
+
 
 export default BuyerRegister;

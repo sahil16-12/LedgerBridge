@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Stepper, 
-  Step, 
-  StepLabel, 
-  Button, 
-  TextField, 
-  InputAdornment, 
+import {
+  Container,
+  Typography,
+  Box,
+  Stepper,
+  Step,
+  StepLabel,
+  Button,
+  TextField,
+  InputAdornment,
   IconButton,
   MenuItem,
   FormControl,
@@ -27,7 +27,9 @@ import {
   Link,
 } from '@mui/material';
 
+
 import { GridLegacy as Grid } from '@mui/material';
+
 
 import {
   Visibility,
@@ -42,6 +44,7 @@ import {
   Person
 } from '@mui/icons-material';
 
+
 // Validation regex patterns
 const PATTERNS = {
   PAN: /[A-Z]{5}[0-9]{4}[A-Z]{1}/,
@@ -50,6 +53,7 @@ const PATTERNS = {
   IFSC: /^[A-Z]{4}0[A-Z0-9]{6}$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 };
+
 
 // Entity types
 const ENTITY_TYPES = [
@@ -62,6 +66,7 @@ const ENTITY_TYPES = [
   "Trust",
   "Others"
 ];
+
 
 // Industry sectors
 const INDUSTRY_SECTORS = [
@@ -84,6 +89,7 @@ const INDUSTRY_SECTORS = [
   "Others"
 ];
 
+
 // Steps for the stepper
 const steps = [
   {
@@ -93,8 +99,8 @@ const steps = [
   {
     label: 'Business Information',
     icon: <BusinessCenter />
-  }, 
-  
+  },
+ 
   {
     label: 'Company Profile',
     icon: <Person />
@@ -108,6 +114,7 @@ const steps = [
     icon: <VpnKey />
   }
 ];
+
 
 interface SupplierFormData {
   userName: string | null;
@@ -128,6 +135,7 @@ interface SupplierFormData {
   password: string;
   confirmPassword: string;
 }
+
 
 interface ValidationErrors {
   [key: string]: string;
@@ -158,7 +166,7 @@ const SupplierRegister: React.FC = () => {
     password: '',
     confirmPassword: ''
   });
-  
+ 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [panExists, setPanExists] = useState(false);
   const [mobileExists, setMobileExists] = useState(false);
@@ -166,7 +174,7 @@ const SupplierRegister: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingBusinessInfo, setFetchingBusinessInfo] = useState(false);
-  
+ 
   // OTP verification states
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
   const [mobileOtp, setMobileOtp] = useState('');
@@ -177,10 +185,10 @@ const SupplierRegister: React.FC = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [otpType, setOtpType] = useState<'mobile' | 'email'>('mobile');
-  
+ 
   // Registration success state
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  
+ 
   // Handle form field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
@@ -207,6 +215,7 @@ const SupplierRegister: React.FC = () => {
     }
   };
 
+
   // Validate mobile existence
   const checkMobile = async () => {
     if (!PATTERNS.MOBILE.test(formData.mobile)) return;
@@ -226,6 +235,7 @@ const SupplierRegister: React.FC = () => {
     }
   };
 
+
   // Handle blur events
   const handlePanBlur = () => checkPan();
   const handleMobileBlur = () => checkMobile();
@@ -238,9 +248,9 @@ const SupplierRegister: React.FC = () => {
       });
       return;
     }
-    
+   
     setFetchingBusinessInfo(true);
-    
+   
     try {
       // This would be a real API call to fetch business details based on PAN
       // For demo, we'll simulate it
@@ -249,15 +259,15 @@ const SupplierRegister: React.FC = () => {
         gstin: "27AAAAA0000A1Z5",
         registeredAddress: "123 Business Park, Corporate Avenue, Mumbai, Maharashtra - 400001"
       };
-      
+     
       // Simulating API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+     
       setFormData({
         ...formData,
         ...mockResponse
       });
-      
+     
       setFetchingBusinessInfo(false);
     } catch (error) {
       console.error("Error fetching business info:", error);
@@ -269,9 +279,11 @@ const SupplierRegister: React.FC = () => {
     }
   };
 
+
   // Validate form data for current step
 const validateCurrentStep = (): boolean => {
     const newErrors: ValidationErrors = {};
+
 
     switch (activeStep) {
       case 0:
@@ -279,15 +291,18 @@ const validateCurrentStep = (): boolean => {
         else if (!PATTERNS.PAN.test(formData.businessPan)) newErrors.businessPan = 'Invalid PAN';
         if (panExists) newErrors.businessPan = 'PAN already registered';
 
+
         if (!formData.mobile) newErrors.mobile = 'Mobile is required';
         else if (!PATTERNS.MOBILE.test(formData.mobile)) newErrors.mobile = 'Invalid mobile';
         if (mobileExists) newErrors.mobile = 'Mobile number already registered';
+
 
         if (!formData.businessName) newErrors.businessName = 'Business name is required';
         if (!formData.gstin) newErrors.gstin = 'GSTIN is required';
         else if (!PATTERNS.GSTIN.test(formData.gstin)) newErrors.gstin = 'Invalid GSTIN';
         if (!formData.registeredAddress) newErrors.registeredAddress = 'Address is required';
         break;
+
 
       case 1:
         if (!formData.contactName) newErrors.contactName = 'Contact name is required';
@@ -298,10 +313,12 @@ const validateCurrentStep = (): boolean => {
         }
         break;
 
+
       case 2:
         if (!formData.entityType) newErrors.entityType = 'Entity type is required';
         if (!formData.industrySector) newErrors.industrySector = 'Industry sector is required';
         break;
+
 
       case 3:
         if (!formData.accountNumber) newErrors.accountNumber = 'Account number is required';
@@ -310,6 +327,7 @@ const validateCurrentStep = (): boolean => {
         else if (!PATTERNS.IFSC.test(formData.ifsc)) newErrors.ifsc = 'Invalid IFSC';
         break;
 
+
       case 4:
         if (!formData.password) newErrors.password = 'Password is required';
         else if (formData.password.length < 8) newErrors.password = 'Password too short';
@@ -317,28 +335,30 @@ const validateCurrentStep = (): boolean => {
         break;
     }
 
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  
+
+ 
   // Handle next button click
   const handleNext = () => {
     if (validateCurrentStep()) {
       setActiveStep((prevStep) => prevStep + 1);
     }
   };
-  
+ 
   // Handle back button click
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
-  
+ 
   // Send OTP to mobile or email
   const sendOtp = async (type: 'mobile' | 'email') => {
     setOtpType(type);
     setSendingOtp(true);
-    
+   
     try {
       // Validate contact information first
       if (type === 'mobile' && !PATTERNS.MOBILE.test(formData.mobile)) {
@@ -349,7 +369,7 @@ const validateCurrentStep = (): boolean => {
         setSendingOtp(false);
         return;
       }
-      
+     
       if (type === 'email' && !PATTERNS.EMAIL.test(formData.contactEmail)) {
         setErrors({
           ...errors,
@@ -358,21 +378,21 @@ const validateCurrentStep = (): boolean => {
         setSendingOtp(false);
         return;
       }
-      
+     
       // This would be an actual API call to send OTP
       // For demo, we'll simulate it
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+     
       // Clear any previous OTP errors
       setOtpError('');
-      
+     
       // Reset OTP values
       if (type === 'mobile') {
         setMobileOtp('');
       } else {
         setEmailOtp('');
       }
-      
+     
       setOtpDialogOpen(true);
       setSendingOtp(false);
     } catch (error) {
@@ -381,31 +401,31 @@ const validateCurrentStep = (): boolean => {
       setSendingOtp(false);
     }
   };
-  
+ 
   // Verify OTP
   const verifyOtp = async () => {
     setVerifyingOtp(true);
-    
+   
     try {
       // This would be an actual API call to verify OTP
       // For demo, we'll simulate it with a fixed OTP "123456"
       const otp = otpType === 'mobile' ? mobileOtp : emailOtp;
-      
+     
       if (otp !== '123456') {
         setOtpError('Invalid OTP. Please try again.');
         setVerifyingOtp(false);
         return;
       }
-      
+     
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+     
       if (otpType === 'mobile') {
         setMobileVerified(true);
       } else {
         setEmailVerified(true);
       }
-      
+     
       setOtpDialogOpen(false);
       setVerifyingOtp(false);
     } catch (error) {
@@ -414,7 +434,7 @@ const validateCurrentStep = (): boolean => {
       setVerifyingOtp(false);
     }
   };
-  
+ 
   // Handle form submission
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
@@ -432,8 +452,8 @@ const validateCurrentStep = (): boolean => {
       setLoading(false);
     }
   };
-  
-  
+ 
+ 
   // Render the current step content
   const getStepContent = (step: number) => {
     switch (step) {
@@ -448,7 +468,7 @@ const validateCurrentStep = (): boolean => {
                 Please enter your business PAN and basic information
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -462,9 +482,9 @@ const validateCurrentStep = (): boolean => {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button 
-                        size="small" 
-                        onClick={fetchBusinessInfo} 
+                      <Button
+                        size="small"
+                        onClick={fetchBusinessInfo}
                         disabled={fetchingBusinessInfo}
                       >
                         {fetchingBusinessInfo ? <CircularProgress size={20} /> : 'Fetch Info'}
@@ -474,7 +494,7 @@ const validateCurrentStep = (): boolean => {
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -489,9 +509,9 @@ const validateCurrentStep = (): boolean => {
                   startAdornment: <InputAdornment position="start">+91</InputAdornment>,
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button 
-                        size="small" 
-                        onClick={() => sendOtp('mobile')} 
+                      <Button
+                        size="small"
+                        onClick={() => sendOtp('mobile')}
                         disabled={sendingOtp || mobileVerified}
                         color={mobileVerified ? "success" : "primary"}
                       >
@@ -511,7 +531,7 @@ const validateCurrentStep = (): boolean => {
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -524,7 +544,7 @@ const validateCurrentStep = (): boolean => {
                 disabled={fetchingBusinessInfo}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -537,7 +557,7 @@ const validateCurrentStep = (): boolean => {
                 disabled={fetchingBusinessInfo}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -554,7 +574,7 @@ const validateCurrentStep = (): boolean => {
             </Grid>
           </Grid>
         );
-        
+       
       case 1:
         return (
           <Grid container spacing={3}>
@@ -566,7 +586,7 @@ const validateCurrentStep = (): boolean => {
                 Please provide authorized contact person details
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -578,7 +598,7 @@ const validateCurrentStep = (): boolean => {
                 helperText={errors.contactName}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -590,7 +610,7 @@ const validateCurrentStep = (): boolean => {
                 helperText={errors.contactDesignation}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -603,9 +623,9 @@ const validateCurrentStep = (): boolean => {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button 
-                        size="small" 
-                        onClick={() => sendOtp('email')} 
+                      <Button
+                        size="small"
+                        onClick={() => sendOtp('email')}
                         disabled={sendingOtp || emailVerified}
                         color={emailVerified ? "success" : "primary"}
                       >
@@ -625,7 +645,7 @@ const validateCurrentStep = (): boolean => {
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -642,7 +662,7 @@ const validateCurrentStep = (): boolean => {
             </Grid>
           </Grid>
         );
-        
+       
       case 2:
         return (
           <Grid container spacing={3}>
@@ -654,7 +674,7 @@ const validateCurrentStep = (): boolean => {
                 Please provide additional details about your company
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!errors.entityType}>
                 <InputLabel>Entity Type*</InputLabel>
@@ -673,7 +693,7 @@ const validateCurrentStep = (): boolean => {
                 {errors.entityType && <FormHelperText>{errors.entityType}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!errors.industrySector}>
                 <InputLabel>Industry Sector*</InputLabel>
@@ -694,7 +714,7 @@ const validateCurrentStep = (): boolean => {
             </Grid>
           </Grid>
         );
-        
+       
       case 3:
         return (
           <Grid container spacing={3}>
@@ -706,7 +726,7 @@ const validateCurrentStep = (): boolean => {
                 Please provide your bank account details for settlements
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -718,7 +738,7 @@ const validateCurrentStep = (): boolean => {
                 helperText={errors.accountNumber}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -730,7 +750,7 @@ const validateCurrentStep = (): boolean => {
                 helperText={errors.bankName}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -742,7 +762,7 @@ const validateCurrentStep = (): boolean => {
                 helperText={errors.ifsc}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <Typography variant="body2" color="textSecondary">
                 Note: Please ensure that the bank account is registered in the name of your business.
@@ -750,7 +770,7 @@ const validateCurrentStep = (): boolean => {
             </Grid>
           </Grid>
         );
-        
+       
       case 4:
         return (
           <Grid container spacing={3}>
@@ -762,7 +782,7 @@ const validateCurrentStep = (): boolean => {
                 Create a secure password for your account
               </Typography>
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -788,7 +808,7 @@ const validateCurrentStep = (): boolean => {
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -814,7 +834,7 @@ const validateCurrentStep = (): boolean => {
                 }}
               />
             </Grid>
-            
+           
             <Grid item xs={12}>
               <Typography variant="body2" color="textSecondary">
                 By registering, you agree to our <Link href="#">Terms of Service</Link> and <Link href="#">Privacy Policy</Link>.
@@ -822,12 +842,12 @@ const validateCurrentStep = (): boolean => {
             </Grid>
           </Grid>
         );
-        
+       
       default:
         return <Typography>Unknown step</Typography>;
     }
   };
-  
+ 
   // OTP Dialog
   const renderOtpDialog = () => {
     return (
@@ -888,7 +908,7 @@ const validateCurrentStep = (): boolean => {
       </Dialog>
     );
   };
-  
+ 
   // Success Dialog
   const renderSuccessDialog = () => {
     return (
@@ -907,7 +927,7 @@ const validateCurrentStep = (): boolean => {
       </Dialog>
     );
   };
-  
+ 
   return (
     <Container maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 4, mb: 4 }}>
@@ -919,13 +939,13 @@ const validateCurrentStep = (): boolean => {
             Join our platform to access financing solutions for your business
           </Typography>
         </Box>
-        
+       
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
           {steps.map((step, index) => (
             <Step key={step.label}>
-              <StepLabel 
-                StepIconProps={{ 
-                  icon: step.icon 
+              <StepLabel
+                StepIconProps={{
+                  icon: step.icon
                 }}
               >
                 {step.label}
@@ -933,11 +953,11 @@ const validateCurrentStep = (): boolean => {
             </Step>
           ))}
         </Stepper>
-        
+       
         <Box mt={4} mb={4}>
           {getStepContent(activeStep)}
         </Box>
-        
+       
         <Box mt={4} display="flex" justifyContent="space-between">
           <Button
             variant="outlined"
@@ -947,7 +967,7 @@ const validateCurrentStep = (): boolean => {
           >
             Back
           </Button>
-          
+         
           {activeStep === steps.length - 1 ? (
             <Button
               variant="contained"
@@ -969,7 +989,7 @@ const validateCurrentStep = (): boolean => {
             </Button>
           )}
         </Box>
-        
+       
         {/* Progress at the bottom of the form */}
         <Box mt={3} display="flex" justifyContent="center">
           <Typography variant="body2" color="textSecondary">
@@ -977,7 +997,7 @@ const validateCurrentStep = (): boolean => {
           </Typography>
         </Box>
       </Paper>
-      
+     
       {/* Already have an account? */}
       <Box textAlign="center" mt={2} mb={4}>
         <Typography variant="body1">
@@ -987,14 +1007,15 @@ const validateCurrentStep = (): boolean => {
           </Link>
         </Typography>
       </Box>
-      
+     
       {/* OTP Dialog */}
       {renderOtpDialog()}
-      
+     
       {/* Success Dialog */}
       {renderSuccessDialog()}
     </Container>
   );
 };
+
 
 export default SupplierRegister;
