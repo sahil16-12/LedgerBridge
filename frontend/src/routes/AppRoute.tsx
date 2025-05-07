@@ -9,6 +9,10 @@ import BidsAndOffers from '../pages/seller/BidsAndOffers';
 import FinancierRegister from '../pages/RegisterFinancier';
 import VerificationPage from '../pages/VerificationPage';
 import LoginPage from '../pages/LoginPage';
+import BuyerLayout from '../layout/buyer/BuyerLayout';
+import BuyerDashboard from '../pages/buyer/BuyerDashboard';
+import InvoiceApproval from '../pages/buyer/InvoiceApproval';
+import InvoiceStatusPage from '../pages/buyer/InvoiceStatus';
 
 export const AppRoute = () => (
   <Routes>
@@ -25,6 +29,13 @@ export const AppRoute = () => (
       <Route path="bids" element={<BidsAndOffers/>} />
       {/* <Route path="invoices" element={<div>Invoices Page</div>} /> */}
       <Route path="settings" element={<div>Settings Page</div>} />
+    </Route>
+
+     {/* Buyer Routes */}
+     <Route path="/buyer" element={<BuyerLayout />}>
+      <Route path="dashboard" element={<BuyerDashboard/>} />
+      <Route path="approvals" element={<InvoiceApproval/>}/>
+      <Route path="invoice-status" element={<InvoiceStatusPage/>}></Route>
     </Route>
 
     <Route path="*" element={<LandingPage />} />
