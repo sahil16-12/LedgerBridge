@@ -49,6 +49,9 @@ public class RegistrationService {
         s.setEntityType(dto.getEntityType());
         s.setUserName(userNameGenerator.generateUniqueUsernameForSupplier(dto.getContactName()));
         s.setPassword(encoder.encode(dto.getPassword()));
+        if (dto.getAlternatePhone() != null && !dto.getAlternatePhone().trim().isEmpty()) {
+            s.setAlternatePhone(dto.getAlternatePhone());
+        }
         supplierRepo.save(s);
         return s.getUserName();
     }
@@ -117,5 +120,21 @@ public class RegistrationService {
         a.setRole(dto.getRole());
         a.setPassword(encoder.encode(dto.getPassword()));
         adminRepo.save(a);
+    }
+
+    public boolean isSupplierPanExists(String pan) {
+        return supplierRepo.existsByBusinessPan(pan);
+    }
+
+    public boolean isSupplierMobileExists(String mobile) {
+        return supplierRepo.existsByMobile(mobile);
+    }
+
+    public boolean isBuyerPanExists(String pan) {
+        return buyerRepo.existsByBuyerPan(pan);
+    }
+
+    public boolean isBuyerMobileExists(String mobile) {
+        return buyerRepo.existsByMobile(mobile);
     }
 }
