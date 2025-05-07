@@ -142,4 +142,20 @@ public class RegistrationService {
         a.setPassword(encoder.encode(dto.getPassword()));
         adminRepo.save(a);
     }
+
+    public boolean isSupplierPanExists(String pan) {
+        return supplierRepo.existsByBusinessPan(pan);
+    }
+
+    public boolean isSupplierMobileExists(String mobile) {
+        return supplierRepo.existsByMobile(mobile);
+    }
+
+    public boolean isBuyerPanExists(String pan) {
+        return buyerRepo.existsByBuyerPan(pan);
+    }
+
+    public boolean isBuyerMobileExists(String mobile) {
+        return buyerRepo.existsByMobile(mobile);
+    }
 }

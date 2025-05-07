@@ -1,5 +1,7 @@
 package com.codewithus.ledgerbridge.Controller;
 import com.codewithus.ledgerbridge.Dto.*;
+import com.codewithus.ledgerbridge.Repository.BuyerRepository;
+import com.codewithus.ledgerbridge.Repository.SupplierRepository;
 import com.codewithus.ledgerbridge.Service.*;
 import jakarta.mail.MessagingException;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +50,17 @@ public class AuthController {
                 "username", username
         ));
     }
+    @GetMapping("/check/supplier/pan")
+    public ResponseEntity<?> checkSupplierPan(@RequestParam String pan) {
+        boolean exists = regService.isSupplierPanExists(pan);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
 
+    @GetMapping("/check/supplier/phone")
+    public ResponseEntity<?> checkSupplierPhone(@RequestParam String phone) {
+        boolean exists = regService.isSupplierMobileExists(phone);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
     @PostMapping("/register/buyer")
     public ResponseEntity<?> registerBuyer(@Validated @RequestBody BuyerRegistrationDto dto) throws MessagingException {
         String activationToken = buyerMailOtpService.initiateRegistration(dto);
@@ -57,7 +69,19 @@ public class AuthController {
                 "activationToken", activationToken
         ));
     }
+    @GetMapping("/check/buyer/pan")
+    public ResponseEntity<?> checkBuyerPan(@RequestParam String pan) {
+        boolean exists = regService.isBuyerPanExists(pan);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
 
+    @GetMapping("/check/buyer/phone")
+    public ResponseEntity<?> checkBuyerPhone(@RequestParam String phone) {
+        boolean exists = regService.isBuyerMobileExists(phone);
+        System.out.println("Mobile " + phone);
+        System.out.println("Exists " + exists);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
     @PostMapping("/verify/buyer")
     public ResponseEntity<?> verifyBuyer(@Validated @RequestBody VerifyDto dto) {
         String username = regService.verifyBuyer(dto.getActivationToken(), dto.getOtp());
