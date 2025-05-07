@@ -294,21 +294,22 @@ const FinancierRegister: React.FC = () => {
     }
   };
 
-  // Submit registration
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
     setLoading(true);
     try {
       const { confirmPassword, ...payload } = formData;
-      const res = await api.post('/register/financier', payload);
-      setFormData(prev => ({ ...prev, userName: res.data.username } as any));
-      setRegistrationSuccess(true);
-      setTimeout(() => navigate('/login'), 3000);
+      const res = await api.post("/register/financier", payload);
+      sessionStorage.setItem("activationToken", res.data.activationToken);
+      sessionStorage.setItem("role", "financier");
+      alert(res.data.message || "Send Otp!!");
+      navigate("/verify");
     } catch (err: any) {
       alert(err.response?.data?.error || "Registration failed");
       setLoading(false);
     }
   };
+
 
 
   // Step content renderer

@@ -440,22 +440,22 @@ const SupplierRegister: React.FC = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
     setLoading(true);
     try {
-      const { confirmPassword, ...supplierData } = formData;
-      const res = await api.post('/register/supplier', supplierData);
-      setFormData(prev => ({ ...prev, userName: res.data.username } as any));
-      setRegistrationSuccess(true);
-      setLoading(false);
-      setTimeout(() => navigate('/login'), 3000);
+      const { confirmPassword, ...payload } = formData;
+      const res = await api.post("/register/supplier", payload);
+      sessionStorage.setItem("activationToken", res.data.activationToken);
+      sessionStorage.setItem("role", "supplier");
+      alert(res.data.message || "Send Otp!!");
+      navigate("/verify");
     } catch (err: any) {
       alert(err.response?.data?.error || "Registration failed");
       setLoading(false);
     }
   };
+
  
  
   // Render the current step content
