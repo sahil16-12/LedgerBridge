@@ -63,7 +63,7 @@ public class Financier {
     private String riskAppetite;
 
     @NotBlank(message = "Credit limit is required")
-    @Pattern(regexp = "^\\d+(\\.\\d{1,2})?$", message = "Invalid amount format")
+//    @Pattern(regexp = "^\\d+(\\.\\d{1,2})?$", message = "Invalid amount format")
     private String creditLimitPerSupplier;
 
     @NotBlank(message = "Password is required")
