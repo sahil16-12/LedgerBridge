@@ -56,9 +56,9 @@ public class Invoice {
     @Column(length = 500)
     private String remarks;
 
-    @Size(max = 255, message = "Document URL must not exceed 255 characters")
-    @Column(length = 255)
-    private String invoiceDocumentUrl;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] invoiceDocument;
 
     @PastOrPresent(message = "Approved date must be today or in the past")
     private LocalDate approvedDate;

@@ -44,8 +44,7 @@ public class InvoiceDto {
     @Size(max = 500, message = "Remarks must not exceed 500 characters")
     private String remarks;
 
-    @Size(max = 255, message = "Document URL must not exceed 255 characters")
-    private String invoiceDocumentUrl;
+    private byte[] invoiceDocument;
 
     @PastOrPresent(message = "Approved date must be today or in the past")
     private LocalDate approvedDate;

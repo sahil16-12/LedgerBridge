@@ -2,6 +2,7 @@ package com.codewithus.ledgerbridge.Dto;
 
 import lombok.*;
 import jakarta.validation.constraints.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,5 +20,5 @@ public class InvoiceCreateDto {
     private LocalDate dueDate;
     private LocalDate uploadDate;
     private String remarks;
-    private String invoiceDocumentUrl;
+    private MultipartFile invoiceDocument;
 }

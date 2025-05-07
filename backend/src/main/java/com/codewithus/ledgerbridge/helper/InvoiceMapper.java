@@ -5,9 +5,20 @@ import com.codewithus.ledgerbridge.Dto.InvoiceCreateDto;
 import com.codewithus.ledgerbridge.Dto.InvoiceDto;
 import com.codewithus.ledgerbridge.Entity.Invoice;
 
+import java.io.IOException;
+
 public class InvoiceMapper {
 
     public static Invoice toEntity(InvoiceCreateDto dto) {
+        byte[] documentBytes = null;
+        if (dto.getInvoiceDocument() != null && !dto.getInvoiceDocument().isEmpty()) {
+            try {
+                documentBytes = dto.getInvoiceDocument().getBytes();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read invoice document", e);
+            }
+        }
+
         return Invoice.builder()
                 .invoiceId(dto.getInvoiceId())
                 .supplierusername(dto.getSupplierusername())
@@ -16,8 +27,7 @@ public class InvoiceMapper {
                 .dueDate(dto.getDueDate())
                 .uploadDate(dto.getUploadDate())
                 .remarks(dto.getRemarks())
-                .invoiceDocumentUrl(dto.getInvoiceDocumentUrl())
-                // default new invoices to PENDING
+                .invoiceDocument(documentBytes)
                 .status(Invoice.InvoiceStatus.PENDING)
                 .build();
     }
@@ -33,9 +43,10 @@ public class InvoiceMapper {
                 .uploadDate(inv.getUploadDate())
                 .status(inv.getStatus())
                 .remarks(inv.getRemarks())
-                .invoiceDocumentUrl(inv.getInvoiceDocumentUrl())
+                .invoiceDocument(inv.getInvoiceDocument())
                 .approvedDate(inv.getApprovedDate())
                 .approvedBy(inv.getApprovedBy())
                 .build();
     }
+
 }
