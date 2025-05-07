@@ -4,6 +4,9 @@ package com.codewithus.ledgerbridge.Service;
 import com.codewithus.ledgerbridge.Dto.*;
 import com.codewithus.ledgerbridge.Entity.*;
 import com.codewithus.ledgerbridge.Repository.*;
+import com.codewithus.ledgerbridge.Utility.JwtUtils;
+import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,8 @@ public class RegistrationService {
     private final AdminRepository adminRepo;
     private final BCryptPasswordEncoder encoder;
     private final UserNameGenerator userNameGenerator;
+    @Autowired
+    private JwtUtils jwtUtils;
     public RegistrationService(SupplierRepository s, BuyerRepository b,
                                FinancierRepository f, AdminRepository a,
                                BCryptPasswordEncoder enc, UserNameGenerator userNameGenerator) {
@@ -28,83 +33,102 @@ public class RegistrationService {
     }
 
 
-    public String registerSupplier(SupplierRegistrationDto dto) {
-        if (supplierRepo.existsByBusinessPan(dto.getBusinessPan())) {
-            throw new IllegalArgumentException("PAN already registered");
+    public String verifySupplier(String activationToken, String otp) {
+        Claims c = jwtUtils.parseToken(activationToken);
+        if (!c.get("otp", String.class).equals(otp)) {
+            throw new IllegalArgumentException("Invalid OTP");
         }
         Supplier s = new Supplier();
-        s.setBusinessPan(dto.getBusinessPan());
-        s.setMobile(dto.getMobile());
-        s.setBusinessName(dto.getBusinessName());
-        s.setGstin(dto.getGstin());
-        s.setRegisteredAddress(dto.getRegisteredAddress());
-        s.setContactName(dto.getContactName());
-        s.setContactDesignation(dto.getContactDesignation());
-        s.setContactEmail(dto.getContactEmail());
-        s.setMobile(dto.getMobile());
-        s.setAccountNumber(dto.getAccountNumber());
-        s.setIndustrySector(dto.getIndustrySector());
-        s.setBankName(dto.getBankName());
-        s.setIfsc(dto.getIfsc());
-        s.setEntityType(dto.getEntityType());
-        s.setUserName(userNameGenerator.generateUniqueUsernameForSupplier(dto.getContactName()));
-        s.setPassword(encoder.encode(dto.getPassword()));
+        s.setBusinessPan(c.get("businessPan", String.class));
+        s.setMobile(c.get("mobile", String.class));
+        s.setBusinessName(c.get("businessName", String.class));
+        s.setGstin(c.get("gstin", String.class));
+        s.setRegisteredAddress(c.get("registeredAddress", String.class));
+        s.setContactName(c.get("contactName", String.class));
+        s.setContactDesignation(c.get("contactDesignation", String.class));
+        s.setContactEmail(c.get("contactEmail", String.class));
+        s.setAlternatePhone(c.get("alternatePhone", String.class));
+        s.setEntityType(c.get("entityType", String.class));
+        s.setIndustrySector(c.get("industrySector", String.class));
+        s.setAccountNumber(c.get("accountNumber", String.class));
+        s.setBankName(c.get("bankName", String.class));
+        s.setIfsc(c.get("ifsc", String.class));
+        s.setUserName(c.get("userName", String.class));
+        s.setPassword(c.get("password", String.class));
+        s.setUserName(userNameGenerator.generateUniqueUsernameForSupplier(c.get("contactName", String.class)));
         supplierRepo.save(s);
         return s.getUserName();
     }
 
 
-    public String registerBuyer(BuyerRegistrationDto dto) {
-        if (buyerRepo.existsByBuyerPan(dto.getBuyerPan())) {
-            throw new IllegalArgumentException("PAN already registered");
+    public String verifyBuyer(String activationToken, String otp) {
+        Claims c = jwtUtils.parseToken(activationToken);
+
+        if (!c.get("otp", String.class).equals(otp)) {
+            throw new IllegalArgumentException("Invalid OTP");
         }
-        Buyer b = new Buyer();
-        b.setBuyerPan(dto.getBuyerPan());
-        b.setGstin(dto.getGstin());
-        b.setMobile(dto.getMobile());
-        b.setCompanyName(dto.getCompanyName());
-        b.setRegisteredAddress(dto.getRegisteredAddress());
-        b.setContactName(dto.getContactName());
-        b.setContactDesignation(dto.getContactDesignation());
-        b.setContactEmail(dto.getContactEmail());
-        b.setContactPhone(dto.getContactPhone());
-        b.setIndustrySector(dto.getIndustrySector());
-        b.setTurnoverBracket(dto.getTurnoverBracket());
-        b.setDesiredCreditLimit(dto.getDesiredCreditLimit());
-        b.setAccountNumber(dto.getAccountNumber());
-        b.setBankName(dto.getBankName());
-        b.setIfsc(dto.getIfsc());
-        b.setUserName(userNameGenerator.generateUniqueUsernameForBuyer(dto.getContactName()));
-        b.setPassword(encoder.encode(dto.getPassword()));
-        buyerRepo.save(b);
-        return b.getUserName();
+
+        Buyer buyer = new Buyer();
+        buyer.setBuyerPan(c.get("buyerPan", String.class));
+        buyer.setGstin(c.get("gstin", String.class));
+        buyer.setMobile(c.get("mobile", String.class));
+        buyer.setCompanyName(c.get("companyName", String.class));
+        buyer.setRegisteredAddress(c.get("registeredAddress", String.class));
+        buyer.setContactName(c.get("contactName", String.class));
+        buyer.setContactDesignation(c.get("contactDesignation", String.class));
+        buyer.setContactEmail(c.get("contactEmail", String.class));
+        buyer.setContactPhone(c.get("contactPhone", String.class));
+        buyer.setIndustrySector(c.get("industrySector", String.class));
+        buyer.setTurnoverBracket(c.get("turnoverBracket", String.class));
+        buyer.setDesiredCreditLimit(c.get("desiredCreditLimit", String.class));
+        buyer.setAccountNumber(c.get("accountNumber", String.class));
+        buyer.setBankName(c.get("bankName", String.class));
+        buyer.setIfsc(c.get("ifsc", String.class));
+        buyer.setPassword(c.get("password", String.class));
+
+        // Generate and set username
+        String generatedUsername = userNameGenerator.generateUniqueUsernameForBuyer(c.get("contactName", String.class));
+        buyer.setUserName(generatedUsername);
+
+        // Save the buyer
+        buyerRepo.save(buyer);
+
+        return generatedUsername;
     }
 
 
-    public String registerFinancier(FinancierRegistrationDto dto) {
-        if (financierRepo.existsByInstitutionPan(dto.getInstitutionPan())) {
-            throw new IllegalArgumentException("PAN already registered");
-        }
-        Financier f = new Financier();
-        f.setInstitutionPan(dto.getInstitutionPan());
-        f.setMobile(dto.getMobile());
-        f.setInstitutionName(dto.getInstitutionName());
-        f.setRbiLicenseNumber(dto.getRbiLicenseNumber());
-        f.setContactName(dto.getContactName());
-        f.setContactDesignation(dto.getContactDesignation());
-        f.setContactEmail(dto.getContactEmail());
-        f.setContactPhone(dto.getContactPhone());
-        f.setAccountNumber(dto.getAccountNumber());
-        f.setBankName(dto.getBankName());
-        f.setIfsc(dto.getIfsc());
-        f.setRiskAppetite(dto.getRiskAppetite());
-        f.setCreditLimitPerSupplier(dto.getCreditLimitPerSupplier());
-        f.setPassword(encoder.encode(dto.getPassword()));
-        f.setUserName(userNameGenerator.generateUniqueUsernameForFinancier(dto.getContactName()));
-        financierRepo.save(f);
-        return f.getUserName();
-    }
+    public String verifyFinancier(String activationToken, String otp) {
+        Claims c = jwtUtils.parseToken(activationToken);
 
+        if (!c.get("otp", String.class).equals(otp)) {
+            throw new IllegalArgumentException("Invalid OTP");
+        }
+
+        Financier financier = new Financier();
+        financier.setInstitutionPan(c.get("institutionPan", String.class));
+        financier.setMobile(c.get("mobile", String.class));
+        financier.setInstitutionName(c.get("institutionName", String.class));
+        financier.setRbiLicenseNumber(c.get("rbiLicenseNumber", String.class));
+        financier.setContactName(c.get("contactName", String.class));
+        financier.setContactDesignation(c.get("contactDesignation", String.class));
+        financier.setContactEmail(c.get("contactEmail", String.class));
+        financier.setContactPhone(c.get("contactPhone", String.class));
+        financier.setAccountNumber(c.get("accountNumber", String.class));
+        financier.setBankName(c.get("bankName", String.class));
+        financier.setIfsc(c.get("ifsc", String.class));
+        financier.setRiskAppetite(c.get("riskAppetite", String.class));
+        financier.setCreditLimitPerSupplier(c.get("creditLimitPerSupplier", String.class));
+        financier.setPassword(c.get("password", String.class));
+
+        // Generate username
+        String generatedUsername = userNameGenerator.generateUniqueUsernameForFinancier(c.get("contactName", String.class));
+        financier.setUserName(generatedUsername);
+
+        // Save financier
+        financierRepo.save(financier);
+
+        return generatedUsername;
+    }
 
     public void registerAdmin(AdminRegistrationDto dto) {
         if (adminRepo.existsByUsername(dto.getUsername())) {
