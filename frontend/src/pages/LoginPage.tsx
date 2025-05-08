@@ -143,7 +143,7 @@ const LoginPage = () => {
         else if (role == "BUYER") {
           navigate("/buyer/dashboard");
         }else if (role == "FINANCIER") {
-          navigate("/buyer/dashboard");
+          navigate("/financier/dashboard");
         }
          else {
           // Default navigation if the role doesn't match expected ones

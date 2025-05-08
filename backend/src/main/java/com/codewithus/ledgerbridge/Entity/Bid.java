@@ -1,5 +1,7 @@
 package com.codewithus.ledgerbridge.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -27,6 +29,7 @@ public class Bid {
     // Link to invoice
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = false)
+    @JsonManagedReference
     private Invoice invoice;
 
     // Link to financier

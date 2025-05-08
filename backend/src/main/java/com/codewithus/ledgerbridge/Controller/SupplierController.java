@@ -1,6 +1,8 @@
 package com.codewithus.ledgerbridge.Controller;
 
 
+import com.codewithus.ledgerbridge.Dto.BiddDTO;
+import com.codewithus.ledgerbridge.Dto.InvoiceWithBidsDTO;
 import com.codewithus.ledgerbridge.Entity.Bid;
 import com.codewithus.ledgerbridge.Entity.Invoice;
 import com.codewithus.ledgerbridge.Entity.Notification;
@@ -9,14 +11,18 @@ import com.codewithus.ledgerbridge.Repository.BidRepository;
 import com.codewithus.ledgerbridge.Repository.InvoiceRepository;
 import com.codewithus.ledgerbridge.Repository.NotificationRepository;
 import com.codewithus.ledgerbridge.Repository.TransactionRepository;
+import com.codewithus.ledgerbridge.Service.SupplierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -34,6 +40,8 @@ public class SupplierController {
     private TransactionRepository transactionRepository;
     @Autowired
     private InvoiceRepository invoiceRepository;
+    @Autowired
+    private SupplierService supplierService;
 
 
     // ✅ Approve or Reject a Bid
@@ -121,9 +129,6 @@ public class SupplierController {
 
 
             transaction = Transaction.builder()
-                    .bid(bid)
-                    .invoice(invoice)
-                    .financier(bid.getFinancier())
                     .bidAmount(bid.getBidAmount())
                     .discountRate(bid.getDiscountRate())
                     .creditedTo(creditedTo)
@@ -148,5 +153,20 @@ public class SupplierController {
         return ResponseEntity.ok(transaction);
     }
 
+    @GetMapping("/{username}/invoices-with-pending-bids")
+    public ResponseEntity<List<Invoice>> getInvoicesWithPendingBids(
+            @PathVariable String username) {
 
+        List<Invoice> allInvoices = invoiceRepository.findBySupplierusername(username);
+
+        // Filter invoices that have at least one bid
+        List<Invoice> invoicesWithBids = allInvoices.stream()
+                .filter(invoice -> invoice.getBids() != null && !invoice.getBids().isEmpty())
+                .collect(Collectors.toList());
+
+        // Optionally clear bids from each invoice to avoid sending them in response
+        invoicesWithBids.forEach(invoice -> invoice.setBids(null));
+
+        return ResponseEntity.ok(invoicesWithBids);
+    }
 }

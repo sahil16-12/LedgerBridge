@@ -2,12 +2,15 @@ package com.codewithus.ledgerbridge.Entity;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "invoices")
@@ -57,6 +60,7 @@ public class Invoice {
     private String remarks;
 
     @Lob
+    @JsonIgnore
     @Column(columnDefinition = "LONGBLOB")
     private byte[] invoiceDocument;
 
@@ -73,13 +77,11 @@ public class Invoice {
         REJECTED
     }
     private  boolean factoring;
+    @OneToMany(mappedBy = "invoice",
+            fetch = FetchType.EAGER,  // ← HERE
+            cascade = CascadeType.ALL)
 
-    @ManyToOne
-    @JoinColumn(name = "supplier_id")
-    private Supplier supplier;
+    @JsonManagedReference
+    private List<Bid> bids;
 
-
-    @ManyToOne
-    @JoinColumn(name = "buyer_id")
-    private Buyer buyer;
 }

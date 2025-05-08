@@ -27,26 +27,13 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     @Query("SELECT i FROM Invoice i WHERE i.status = 'APPROVED' AND i.id NOT IN (SELECT b.invoice.id FROM Bid b)")
     List<Invoice> findApprovedInvoicesWithoutBids();
 
-
-    // Additional useful queries
-    @Query("SELECT i FROM Invoice i WHERE i.buyerusername = :buyerUsername AND i.dueDate BETWEEN :startDate AND :endDate")
-    List<Invoice> findInvoicesByBuyerAndDueDateRange(
-            @Param("buyerUsername") String buyerUsername,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
-    );
+    List<Invoice> findBySupplierusername(String username);
 
 
-    @Query("SELECT SUM(i.amount) FROM Invoice i WHERE i.buyerusername = :buyerUsername AND i.status = :status")
-    Double sumAmountByBuyerAndStatus(
-            @Param("buyerUsername") String buyerUsername,
-            @Param("status") Invoice.InvoiceStatus status
-    );
 
 
-    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.buyerusername = :buyerUsername AND i.status = :status")
-    Long countByBuyerAndStatus(
-            @Param("buyerUsername") String buyerUsername,
-            @Param("status") Invoice.InvoiceStatus status
-    );
 }
+
+
+
+
