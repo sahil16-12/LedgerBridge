@@ -39,7 +39,8 @@ import {
   ContactPhone,
   AccountBalance,
   VpnKey,
-  Person,
+  Storefront,
+  Assessment,
 } from "@mui/icons-material";
 
 // Validation regex patterns
@@ -50,18 +51,6 @@ const PATTERNS = {
   IFSC: /^[A-Z]{4}0[A-Z0-9]{6}$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
 };
-
-// Entity types
-const ENTITY_TYPES = [
-  "Private Limited Company",
-  "Public Limited Company",
-  "Limited Liability Partnership (LLP)",
-  "Partnership Firm",
-  "Sole Proprietorship",
-  "One Person Company",
-  "Trust",
-  "Others",
-];
 
 // Industry sectors
 const INDUSTRY_SECTORS = [
@@ -84,6 +73,24 @@ const INDUSTRY_SECTORS = [
   "Others",
 ];
 
+// Turnover brackets
+const TURNOVER_BRACKETS = [
+  "Less than ₹10 Crore",
+  "₹10 Crore - ₹50 Crore",
+  "₹50 Crore - ₹100 Crore",
+  "₹100 Crore - ₹500 Crore",
+  "More than ₹500 Crore",
+];
+
+// Credit limit options
+const CREDIT_LIMIT_OPTIONS = [
+  "Up to ₹10 Lakh",
+  "₹10 Lakh - ₹50 Lakh",
+  "₹50 Lakh - ₹1 Crore",
+  "₹1 Crore - ₹5 Crore",
+  "More than ₹5 Crore",
+];
+
 // Steps for the stepper
 const steps = [
   {
@@ -94,13 +101,12 @@ const steps = [
     label: "Business Information",
     icon: <BusinessCenter />,
   },
-
   {
-    label: "Company Profile",
-    icon: <Person />,
+    label: "Financial Details",
+    icon: <Assessment />,
   },
   {
-    label: "Bank Settlement",
+    label: "Bank Details",
     icon: <AccountBalance />,
   },
   {
@@ -109,19 +115,20 @@ const steps = [
   },
 ];
 
-interface SupplierFormData {
+interface BuyerFormData {
   userName: string | null;
-  businessPan: string;
+  buyerPan: string;
   mobile: string;
-  businessName: string;
+  companyName: string;
   gstin: string;
   registeredAddress: string;
   contactName: string;
   contactDesignation: string;
   contactEmail: string;
-  alternatePhone: string;
-  entityType: string;
+  contactPhone: string;
   industrySector: string;
+  turnoverBracket: string;
+  desiredCreditLimit: string;
   accountNumber: string;
   bankName: string;
   ifsc: string;
@@ -132,26 +139,29 @@ interface SupplierFormData {
 interface ValidationErrors {
   [key: string]: string;
 }
+// Axios instance
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/auth`,
   headers: { "Content-Type": "application/json" },
 });
-const SupplierRegister: React.FC = () => {
+
+const BuyerRegister: React.FC = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState<SupplierFormData>({
+  const [formData, setFormData] = useState<BuyerFormData>({
     userName: null,
-    businessPan: "",
+    buyerPan: "",
     mobile: "",
-    businessName: "",
+    companyName: "",
     gstin: "",
     registeredAddress: "",
     contactName: "",
     contactDesignation: "",
     contactEmail: "",
-    alternatePhone: "",
-    entityType: "",
+    contactPhone: "",
     industrySector: "",
+    turnoverBracket: "",
+    desiredCreditLimit: "",
     accountNumber: "",
     bankName: "",
     ifsc: "",
@@ -160,9 +170,9 @@ const SupplierRegister: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
   const [panExists, setPanExists] = useState(false);
   const [mobileExists, setMobileExists] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingBusinessInfo, setFetchingBusinessInfo] = useState(false);
@@ -180,69 +190,57 @@ const SupplierRegister: React.FC = () => {
 
   // Registration success state
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const checkPan = async () => {
+    if (PATTERNS.PAN.test(formData.buyerPan)) {
+      try {
+        const { data } = await api.get("/check/buyer/pan", {
+          params: { pan: formData.buyerPan },
+        });
+        setPanExists(data.exists);
+        setErrors((prev) => ({
+          ...prev,
+          buyerPan: data.exists ? "PAN already registered" : "",
+        }));
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+  const checkMobile = async () => {
+    if (PATTERNS.MOBILE.test(formData.mobile)) {
+      try {
+        const { data } = await api.get("/check/buyer/phone", {
+          params: { phone: formData.mobile },
+        });
+        setMobileExists(data.exists);
+        setErrors((prev) => ({
+          ...prev,
+          mobile: data.exists ? "Mobile already registered" : "",
+        }));
+      } catch {
+        /* ignore */
+      }
+    }
+  };
 
+  const handlePanBlur = () => checkPan();
+  const handleMobileBlur = () => checkMobile();
   // Handle form field changes
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
   ) => {
     const { name, value } = e.target;
-    if (!name) return;
-    setFormData((prev) => ({ ...prev, [name]: value } as any));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
-  // Validate PAN existence
-  const checkPan = async () => {
-    if (!PATTERNS.PAN.test(formData.businessPan)) return;
-    try {
-      const { data } = await api.get("/check/supplier/pan", {
-        params: { pan: formData.businessPan },
-      });
-      if (data.exists) {
-        setPanExists(true);
-        setErrors((prev) => ({
-          ...prev,
-          businessPan: "PAN already registered",
-        }));
-      } else {
-        setPanExists(false);
-        setErrors((prev) => ({ ...prev, businessPan: "" }));
-      }
-    } catch {
-      // ignore
+    if (name) {
+      setFormData((prev) => ({ ...prev, [name]: value } as any));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
-
-  // Validate mobile existence
-  const checkMobile = async () => {
-    if (!PATTERNS.MOBILE.test(formData.mobile)) return;
-    try {
-      const { data } = await api.get("/check/supplier/phone", {
-        params: { phone: formData.mobile },
-      });
-      if (data.exists) {
-        setMobileExists(true);
-        setErrors((prev) => ({
-          ...prev,
-          mobile: "Mobile number already registered",
-        }));
-      } else {
-        setMobileExists(false);
-        setErrors((prev) => ({ ...prev, mobile: "" }));
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  // Handle blur events
-  const handlePanBlur = () => checkPan();
-  const handleMobileBlur = () => checkMobile();
   // Fetch business information based on PAN
   const fetchBusinessInfo = async () => {
-    if (!formData.businessPan || !PATTERNS.PAN.test(formData.businessPan)) {
+    if (!formData.buyerPan || !PATTERNS.PAN.test(formData.buyerPan)) {
       setErrors({
         ...errors,
-        businessPan: "Please enter a valid PAN",
+        buyerPan: "Please enter a valid PAN",
       });
       return;
     }
@@ -253,10 +251,10 @@ const SupplierRegister: React.FC = () => {
       // This would be a real API call to fetch business details based on PAN
       // For demo, we'll simulate it
       const mockResponse = {
-        businessName: "Demo Business Pvt Ltd",
+        companyName: "Demo Buyer Ltd",
         gstin: "27AAAAA0000A1Z5",
         registeredAddress:
-          "123 Business Park, Corporate Avenue, Mumbai, Maharashtra - 400001",
+          "456 Corporate Plaza, Financial District, Mumbai, Maharashtra - 400051",
       };
 
       // Simulating API delay
@@ -272,7 +270,7 @@ const SupplierRegister: React.FC = () => {
       console.error("Error fetching business info:", error);
       setErrors({
         ...errors,
-        businessPan: "Failed to fetch business information",
+        buyerPan: "Failed to fetch business information",
       });
       setFetchingBusinessInfo(false);
     }
@@ -281,72 +279,62 @@ const SupplierRegister: React.FC = () => {
   // Validate form data for current step
   const validateCurrentStep = (): boolean => {
     const newErrors: ValidationErrors = {};
-
     switch (activeStep) {
       case 0:
-        if (!formData.businessPan) newErrors.businessPan = "PAN is required";
-        else if (!PATTERNS.PAN.test(formData.businessPan))
-          newErrors.businessPan = "Invalid PAN";
-        if (panExists) newErrors.businessPan = "PAN already registered";
-
+        if (!formData.buyerPan) newErrors.buyerPan = "PAN is required";
+        else if (!PATTERNS.PAN.test(formData.buyerPan))
+          newErrors.buyerPan = "Invalid PAN";
+        if (panExists) newErrors.buyerPan = "PAN already registered";
         if (!formData.mobile) newErrors.mobile = "Mobile is required";
         else if (!PATTERNS.MOBILE.test(formData.mobile))
           newErrors.mobile = "Invalid mobile";
-        if (mobileExists) newErrors.mobile = "Mobile number already registered";
-
-        if (!formData.businessName)
-          newErrors.businessName = "Business name is required";
+        if (mobileExists) newErrors.mobile = "Mobile already registered";
+        if (!formData.companyName)
+          newErrors.companyName = "Company name is required";
         if (!formData.gstin) newErrors.gstin = "GSTIN is required";
         else if (!PATTERNS.GSTIN.test(formData.gstin))
           newErrors.gstin = "Invalid GSTIN";
         if (!formData.registeredAddress)
           newErrors.registeredAddress = "Address is required";
         break;
-
       case 1:
         if (!formData.contactName)
-          newErrors.contactName = "Contact name is required";
-        if (!formData.contactEmail)
-          newErrors.contactEmail = "Email is required";
+          newErrors.contactName = "Contact name required";
+        if (!formData.contactEmail) newErrors.contactEmail = "Email required";
         else if (!PATTERNS.EMAIL.test(formData.contactEmail))
           newErrors.contactEmail = "Invalid email";
-        if (
-          formData.alternatePhone &&
-          !PATTERNS.MOBILE.test(formData.alternatePhone)
-        ) {
-          newErrors.alternatePhone = "Invalid alternate phone";
-        }
+        if (!formData.contactPhone)
+          newErrors.contactPhone = "Contact phone required";
+        else if (!PATTERNS.MOBILE.test(formData.contactPhone))
+          newErrors.contactPhone = "Invalid phone";
         break;
-
       case 2:
-        if (!formData.entityType)
-          newErrors.entityType = "Entity type is required";
         if (!formData.industrySector)
-          newErrors.industrySector = "Industry sector is required";
+          newErrors.industrySector = "Industry required";
+        if (!formData.turnoverBracket)
+          newErrors.turnoverBracket = "Turnover required";
+        if (!formData.desiredCreditLimit)
+          newErrors.desiredCreditLimit = "Credit limit required";
         break;
-
       case 3:
         if (!formData.accountNumber)
-          newErrors.accountNumber = "Account number is required";
-        if (!formData.bankName) newErrors.bankName = "Bank name is required";
-        if (!formData.ifsc) newErrors.ifsc = "IFSC is required";
+          newErrors.accountNumber = "Account number required";
+        if (!formData.bankName) newErrors.bankName = "Bank name required";
+        if (!formData.ifsc) newErrors.ifsc = "IFSC required";
         else if (!PATTERNS.IFSC.test(formData.ifsc))
           newErrors.ifsc = "Invalid IFSC";
         break;
-
       case 4:
-        if (!formData.password) newErrors.password = "Password is required";
+        if (!formData.password) newErrors.password = "Password required";
         else if (formData.password.length < 8)
-          newErrors.password = "Password too short";
+          newErrors.password = "Minimum 8 chars";
         if (formData.password !== formData.confirmPassword)
           newErrors.confirmPassword = "Passwords must match";
         break;
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   // Handle next button click
   const handleNext = () => {
     if (validateCurrentStep()) {
@@ -440,14 +428,15 @@ const SupplierRegister: React.FC = () => {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
     setLoading(true);
     try {
       const { confirmPassword, ...payload } = formData;
-      const res = await api.post("/register/supplier", payload);
+      const res = await api.post("/register/buyer", payload);
       sessionStorage.setItem("activationToken", res.data.activationToken);
-      sessionStorage.setItem("role", "supplier");
+      sessionStorage.setItem("role", "Buyer");
       alert(res.data.message || "Send Otp!!");
       navigate("/verify");
     } catch (err: any) {
@@ -456,8 +445,6 @@ const SupplierRegister: React.FC = () => {
     }
   };
 
- 
- 
   // Render the current step content
   const getStepContent = (step: number) => {
     switch (step) {
@@ -466,7 +453,7 @@ const SupplierRegister: React.FC = () => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Business Information
+                Contact Details
               </Typography>
               <Typography variant="body2" color="textSecondary" gutterBottom>
                 Please enter your business PAN and basic information
@@ -476,13 +463,13 @@ const SupplierRegister: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                name="businessPan"
+                name="buyerPan"
                 label="Business PAN*"
-                value={formData.businessPan}
+                value={formData.buyerPan}
                 onBlur={handlePanBlur}
                 onChange={handleChange}
-                error={!!errors.businessPan}
-                helperText={errors.businessPan}
+                error={!!errors.buyerPan}
+                helperText={errors.buyerPan}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -509,8 +496,8 @@ const SupplierRegister: React.FC = () => {
                 name="mobile"
                 label="Mobile Number*"
                 value={formData.mobile}
-                onBlur={handleMobileBlur}
                 onChange={handleChange}
+                onBlur={handleMobileBlur}
                 error={!!errors.mobile}
                 helperText={errors.mobile}
                 InputProps={{
@@ -545,12 +532,12 @@ const SupplierRegister: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                name="businessName"
-                label="Business Name*"
-                value={formData.businessName}
+                name="companyName"
+                label="Company Name*"
+                value={formData.companyName}
                 onChange={handleChange}
-                error={!!errors.businessName}
-                helperText={errors.businessName}
+                error={!!errors.companyName}
+                helperText={errors.companyName}
                 disabled={fetchingBusinessInfo}
               />
             </Grid>
@@ -590,7 +577,7 @@ const SupplierRegister: React.FC = () => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Contact Details
+                Business Information
               </Typography>
               <Typography variant="body2" color="textSecondary" gutterBottom>
                 Please provide authorized contact person details
@@ -659,12 +646,12 @@ const SupplierRegister: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                name="alternatePhone"
-                label="Alternate Phone (Optional)"
-                value={formData.alternatePhone}
+                name="contactPhone"
+                label="Contact Phone*"
+                value={formData.contactPhone}
                 onChange={handleChange}
-                error={!!errors.alternatePhone}
-                helperText={errors.alternatePhone}
+                error={!!errors.contactPhone}
+                helperText={errors.contactPhone}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">+91</InputAdornment>
@@ -680,32 +667,11 @@ const SupplierRegister: React.FC = () => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Company Profile
+                Financial Details
               </Typography>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                Please provide additional details about your company
+                Please provide your company's financial information
               </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth error={!!errors.entityType}>
-                <InputLabel>Entity Type*</InputLabel>
-                <Select
-                  name="entityType"
-                  value={formData.entityType}
-                  label="Entity Type*"
-                  onChange={handleChange}
-                >
-                  {ENTITY_TYPES.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.entityType && (
-                  <FormHelperText>{errors.entityType}</FormHelperText>
-                )}
-              </FormControl>
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -728,6 +694,55 @@ const SupplierRegister: React.FC = () => {
                 )}
               </FormControl>
             </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth error={!!errors.turnoverBracket}>
+                <InputLabel>Annual Turnover*</InputLabel>
+                <Select
+                  name="turnoverBracket"
+                  value={formData.turnoverBracket}
+                  label="Annual Turnover*"
+                  onChange={handleChange}
+                >
+                  {TURNOVER_BRACKETS.map((bracket) => (
+                    <MenuItem key={bracket} value={bracket}>
+                      {bracket}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.turnoverBracket && (
+                  <FormHelperText>{errors.turnoverBracket}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth error={!!errors.desiredCreditLimit}>
+                <InputLabel>Desired Credit Limit*</InputLabel>
+                <Select
+                  name="desiredCreditLimit"
+                  value={formData.desiredCreditLimit}
+                  label="Desired Credit Limit*"
+                  onChange={handleChange}
+                >
+                  {CREDIT_LIMIT_OPTIONS.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.desiredCreditLimit && (
+                  <FormHelperText>{errors.desiredCreditLimit}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="body2" color="textSecondary">
+                Note: The desired credit limit is subject to approval based on
+                your company's financials.
+              </Typography>
+            </Grid>
           </Grid>
         );
 
@@ -736,10 +751,10 @@ const SupplierRegister: React.FC = () => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Bank Settlement Details
+                Bank Details
               </Typography>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                Please provide your bank account details for settlements
+                Please provide your bank account details
               </Typography>
             </Grid>
 
@@ -934,28 +949,30 @@ const SupplierRegister: React.FC = () => {
                 : emailOtp.length !== 6)
             }
           >
-            {verifyingOtp ? <CircularProgress size={20} /> : "Verify"}
+            {verifyingOtp ? <CircularProgress size={20} /> : "Verify OTP"}
           </Button>
         </DialogActions>
       </Dialog>
     );
   };
 
-  // Success Dialog
+  // Success dialog
   const renderSuccessDialog = () => {
     return (
-      <Dialog open={registrationSuccess}>
-        <DialogTitle>Registration Successful!</DialogTitle>
+      <Dialog
+        open={registrationSuccess}
+        aria-labelledby="registration-success-dialog-title"
+      >
+        <DialogTitle id="registration-success-dialog-title">
+          Registration Successful
+        </DialogTitle>
         <DialogContent>
-          <Box display="flex" flexDirection="column" alignItems="center" p={2}>
-            <CheckCircle
-              color="success"
-              style={{ fontSize: 60, marginBottom: 16 }}
-            />
-            <DialogContentText align="center">
-              Your supplier account has been successfully created.
+          <Box display="flex" flexDirection="column" alignItems="center" py={2}>
+            <CheckCircle color="success" sx={{ fontSize: 60, mb: 2 }} />
+            <DialogContentText textAlign="center">
+              Your buyer account has been created successfully.
               <br />
-              You will be redirected to the login page shortly.
+              You will be redirected to the login page momentarily.
             </DialogContentText>
           </Box>
         </DialogContent>
@@ -964,14 +981,12 @@ const SupplierRegister: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} sx={{ p: 4, mt: 4, mb: 4 }}>
-        <Box mb={4} textAlign="center">
-          <Typography variant="h4" component="h1" gutterBottom>
-            Supplier Registration
-          </Typography>
-          <Typography variant="body1" color="textSecondary">
-            Join our platform to access financing solutions for your business
+    <Container maxWidth="md" sx={{ my: 4 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Box display="flex" alignItems="center" mb={4}>
+          <Storefront color="primary" sx={{ fontSize: 32, mr: 2 }} />
+          <Typography variant="h4" component="h1">
+            Buyer Registration
           </Typography>
         </Box>
 
@@ -979,9 +994,25 @@ const SupplierRegister: React.FC = () => {
           {steps.map((step, index) => (
             <Step key={step.label}>
               <StepLabel
-                StepIconProps={{
-                  icon: step.icon,
-                }}
+                StepIconComponent={() => (
+                  <Box
+                    sx={{
+                      color:
+                        index === activeStep
+                          ? "primary.main"
+                          : index < activeStep
+                          ? "success.main"
+                          : "grey.400",
+                      borderRadius: "50%",
+                      p: 1,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {step.icon}
+                  </Box>
+                )}
               >
                 {step.label}
               </StepLabel>
@@ -989,73 +1020,70 @@ const SupplierRegister: React.FC = () => {
           ))}
         </Stepper>
 
-        <Box mt={4} mb={4}>
-          {getStepContent(activeStep)}
-        </Box>
-
-        <Box mt={4} display="flex" justifyContent="space-between">
-          <Button
-            variant="outlined"
-            onClick={handleBack}
-            startIcon={<ArrowBack />}
-            disabled={activeStep === 0}
-          >
-            Back
-          </Button>
-
-          {activeStep === steps.length - 1 ? (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-              endIcon={
-                loading ? (
-                  <CircularProgress size={20} color="inherit" />
-                ) : (
-                  <CheckCircle />
-                )
-              }
-              disabled={loading}
-            >
-              {loading ? "Submitting" : "Complete Registration"}
-            </Button>
+        <Box>
+          {activeStep === steps.length ? (
+            <Box textAlign="center" py={3}>
+              <Typography variant="h6" gutterBottom>
+                All steps completed
+              </Typography>
+              <Typography variant="body1" color="textSecondary" paragraph>
+                Please review your information before submitting.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSubmit}
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={20} /> : null}
+                sx={{ mt: 2 }}
+              >
+                {loading ? "Submitting..." : "Submit Registration"}
+              </Button>
+            </Box>
           ) : (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleNext}
-              endIcon={<ArrowForward />}
-            >
-              Next
-            </Button>
+            <>
+              <Box>{getStepContent(activeStep)}</Box>
+              <Box mt={4} display="flex" justifyContent="space-between">
+                <Button
+                  disabled={activeStep === 0}
+                  onClick={handleBack}
+                  startIcon={<ArrowBack />}
+                >
+                  Back
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleNext}
+                  endIcon={
+                    activeStep === steps.length - 1 ? null : <ArrowForward />
+                  }
+                >
+                  {activeStep === steps.length - 1 ? "Review" : "Next"}
+                </Button>
+              </Box>
+            </>
           )}
-        </Box>
-
-        {/* Progress at the bottom of the form */}
-        <Box mt={3} display="flex" justifyContent="center">
-          <Typography variant="body2" color="textSecondary">
-            Step {activeStep + 1} of {steps.length}
-          </Typography>
         </Box>
       </Paper>
 
-      {/* Already have an account? */}
-      <Box textAlign="center" mt={2} mb={4}>
-        <Typography variant="body1">
+      <Box mt={3} textAlign="center">
+        <Typography variant="body2" color="textSecondary">
           Already have an account?{" "}
-          <Link component="button" onClick={() => navigate("/login")}>
-            Login here
+          <Link
+            component="button"
+            variant="body2"
+            onClick={() => navigate("/login")}
+          >
+            Log in
           </Link>
         </Typography>
       </Box>
 
-      {/* OTP Dialog */}
       {renderOtpDialog()}
-
-      {/* Success Dialog */}
       {renderSuccessDialog()}
     </Container>
   );
 };
 
-export default SupplierRegister;
+export default BuyerRegister;

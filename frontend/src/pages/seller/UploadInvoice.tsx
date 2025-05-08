@@ -1,42 +1,57 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FileUp, X, Upload, File } from 'lucide-react';
+import axios from 'axios';
+import { useUserContext } from '../../context/UserContext';
 
 interface InvoiceFormData {
+  supplierusername: string;
   invoiceNumber: string;
-  buyerId: string;
+  buyerusername: string;
   amount: string;
   dueDate: string;
-  description: string;
-  file: File | null;
+  remarks: string;
+  uploadDate: string;
+  invoiceDocument: File | null;
 }
-
+interface Buyer {
+  id: number;
+  userName: string;
+  companyName: string;
+}
 const UploadInvoice = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
+  const { user } = useUserContext();
   const [formData, setFormData] = useState<InvoiceFormData>({
+    supplierusername: '',
     invoiceNumber: '',
-    buyerId: '',
+    buyerusername: '',
     amount: '',
     dueDate: '',
-    description: '',
-    file: null
+    remarks: '',
+    uploadDate: '',
+    invoiceDocument: null
   });
 
-  // Mock buyers list (replace with API call)
-  const buyers = [
-    { id: '1', name: 'Tech Corp Industries' },
-    { id: '2', name: 'Global Systems Ltd' },
-    { id: '3', name: 'Innovate Solutions' },
-    { id: '4', name: 'Meta Enterprises' },
-  ];
-
+  // Buyers list state
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+  useEffect(() => {
+    console.log('User');
+    console.log(user);
+    axios
+      .get<Buyer[]>(`${import.meta.env.VITE_API_BASE_URL}/api/buyers`)
+      .then(res => setBuyers(res.data))
+      .catch(err => {
+        console.error('Failed to load buyers:', err);
+        alert('Could not fetch buyers list.');
+      });
+  }, []);
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type === 'application/pdf') {
-        setFormData(prev => ({ ...prev, file }));
+        setFormData(prev => ({ ...prev, invoiceDocument: file }));
         const fileUrl = URL.createObjectURL(file);
         setPreviewUrl(fileUrl);
       } else {
@@ -55,24 +70,46 @@ const UploadInvoice = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
-      // TODO: Implement API call to submit invoice
-      console.log('Submitting invoice:', formData);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
+
+      const payload = new FormData();
+      payload.append('supplierusername', user?.userName ?? "Supplier_shahil_478587");  
+      payload.append('buyerusername', formData.buyerusername);  
+      payload.append('amount', formData.amount);
+      payload.append('dueDate', formData.dueDate);
+      const today = new Date().toISOString().split('T')[0];
+      payload.append('uploadDate', today);
+      payload.append('remarks', formData.remarks);
+      if (formData.invoiceDocument) {
+        payload.append('invoiceDocument', formData.invoiceDocument);
+      }
+  
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/invoices/create`,
+        payload
+      );
+  
+      console.log(response);
       alert('Invoice uploaded successfully!');
+  
+      // Reset form
       setFormData({
+        supplierusername: '',
         invoiceNumber: '',
-        buyerId: '',
+        buyerusername: '',
         amount: '',
         dueDate: '',
-        description: '',
-        file: null
+        remarks: '',
+        uploadDate: '',
+        invoiceDocument: null,
       });
       setPreviewUrl(null);
+  
     } catch (error) {
-      alert('Error uploading invoice');
       console.error(error);
+      alert('Error uploading invoice');
     } finally {
       setLoading(false);
     }
@@ -107,7 +144,7 @@ const UploadInvoice = () => {
                     <div className="flex items-center space-x-2">
                       <File className="h-6 w-6 text-[#48A6A7]" />
                       <span className="text-sm text-gray-600">
-                        {formData.file?.name}
+                        {formData.invoiceDocument?.name}
                       </span>
                     </div>
                     <button
@@ -149,20 +186,18 @@ const UploadInvoice = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Buyer
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Buyer</label>
                 <select
-                  name="buyerId"
-                  value={formData.buyerId}
+                  name="buyerusername"
+                  value={formData.buyerusername}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#48A6A7] focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#48A6A7]"
                 >
                   <option value="">Select a buyer</option>
-                  {buyers.map(buyer => (
-                    <option key={buyer.id} value={buyer.id}>
-                      {buyer.name}
+                  {buyers.map(b => (
+                    <option key={b.id} value={b.userName}>
+                      {b.companyName}
                     </option>
                   ))}
                 </select>
@@ -203,8 +238,8 @@ const UploadInvoice = () => {
                   Description
                 </label>
                 <textarea
-                  name="description"
-                  value={formData.description}
+                  name="remarks"
+                  value={formData.remarks}
                   onChange={handleInputChange}
                   rows={4}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#48A6A7] focus:border-transparent"
@@ -216,10 +251,10 @@ const UploadInvoice = () => {
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={loading || !formData.file}
+              disabled={loading || !formData.invoiceDocument}
               className={`
                 flex items-center space-x-2 px-6 py-3 bg-[#006A71] text-white rounded-lg
-                ${loading || !formData.file 
+                ${loading || !formData.invoiceDocument 
                   ? 'opacity-50 cursor-not-allowed' 
                   : 'hover:bg-[#48A6A7] transition-colors'}
               `}

@@ -4,8 +4,11 @@ import com.codewithus.ledgerbridge.Entity.Admin;
 import com.codewithus.ledgerbridge.Entity.Buyer;
 import com.codewithus.ledgerbridge.Entity.Financier;
 import com.codewithus.ledgerbridge.Entity.Supplier;
+<<<<<<< HEAD
 import com.codewithus.ledgerbridge.Repository.BuyerRepository;
 import com.codewithus.ledgerbridge.Repository.SupplierRepository;
+=======
+>>>>>>> 40f14a79197f05dc33aa877a325fc6427481658f
 import com.codewithus.ledgerbridge.Service.*;
 import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
@@ -88,7 +91,7 @@ public class AuthController {
         System.out.println("Exists " + exists);
         return ResponseEntity.ok(Map.of("exists", exists));
     }
-    @PostMapping("/verify/buyer")
+    @PostMapping("/verify/Buyer")
     public ResponseEntity<?> verifyBuyer(@Validated @RequestBody VerifyDto dto) {
         String username = regService.verifyBuyer(dto.getActivationToken(), dto.getOtp());
         return ResponseEntity.ok(Map.of(
@@ -142,7 +145,12 @@ public class AuthController {
             System.out.println(user);
             String role;
 
+<<<<<<< HEAD
             if(user instanceof Admin) {
+=======
+
+            if (user instanceof Admin) {
+>>>>>>> 40f14a79197f05dc33aa877a325fc6427481658f
                 role = "ADMIN";
             } else if (user instanceof Buyer) {
                 role = "BUYER";
@@ -155,16 +163,23 @@ public class AuthController {
                         .body("Unknown user type");
             }
 
+<<<<<<< HEAD
             // Create a response map (or DTO) to send user info and role
+=======
+>>>>>>> 40f14a79197f05dc33aa877a325fc6427481658f
             Map<String, Object> response = new HashMap<>();
             response.put("role", role);
             response.put("user", user);
 
             return ResponseEntity.ok(response);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 40f14a79197f05dc33aa877a325fc6427481658f
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-    }
 
+    }
 }
