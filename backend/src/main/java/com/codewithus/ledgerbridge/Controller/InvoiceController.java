@@ -32,6 +32,7 @@ public class InvoiceController {
     )
     public ResponseEntity<InvoiceDto> createInvoice(
             @Valid @ModelAttribute InvoiceCreateDto dto) {
+
         InvoiceDto created = invoiceService.createInvoice(dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
