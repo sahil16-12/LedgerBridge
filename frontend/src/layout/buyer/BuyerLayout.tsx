@@ -39,7 +39,7 @@ const BuyerLayout = () => {
       )}
 
       {/* Top Navbar */}
-      <TopNavbar />
+      {/* <TopNavbar /> */}
 
       {/* Navigation Sidebar */}
       <div className={`

@@ -507,7 +507,7 @@ const BuyerRegister: React.FC = () => {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button
+                      {/* <Button
                         size="small"
                         onClick={() => sendOtp("mobile")}
                         disabled={sendingOtp || mobileVerified}
@@ -523,7 +523,7 @@ const BuyerRegister: React.FC = () => {
                         ) : (
                           "Verify"
                         )}
-                      </Button>
+                      </Button> */}
                     </InputAdornment>
                   ),
                 }}

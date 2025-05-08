@@ -39,7 +39,7 @@ const SellerLayout = () => {
       )}
 
       {/* Top Navbar */}
-      <TopNavbar />
+      {/* <TopNavbar /> */}
 
       {/* Navigation Sidebar */}
       <div className={`

@@ -351,14 +351,14 @@ const FinancierRegister: React.FC = () => {
                   startAdornment: <InputAdornment position="start">+91</InputAdornment>,
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button
+                      {/* <Button
                         size="small"
                         onClick={() => sendOtp('mobile')}
                         disabled={sendingOtp || mobileVerified}
                         color={mobileVerified ? "success" : "primary"}
                       >
                         {sendingOtp && otpType === 'mobile' ? <CircularProgress size={20} /> : mobileVerified ? <><CheckCircle fontSize="small" /> Verified</> : 'Verify'}
-                      </Button>
+                      </Button> */}
                     </InputAdornment>
                   )
                 }}

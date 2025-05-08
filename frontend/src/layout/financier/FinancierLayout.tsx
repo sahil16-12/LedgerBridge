@@ -28,7 +28,7 @@ const FinancierLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <FinancierTopNavbar onMenuClick={() => setIsSidebarOpen(true)} />
+        {/* <FinancierTopNavbar onMenuClick={() => setIsSidebarOpen(true)} /> */}
         <main className="flex-1 overflow-auto p-6">
           <Outlet />
         </main>

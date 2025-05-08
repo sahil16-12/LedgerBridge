@@ -253,10 +253,10 @@ const SupplierRegister: React.FC = () => {
       // This would be a real API call to fetch business details based on PAN
       // For demo, we'll simulate it
       const mockResponse = {
-        businessName: "Demo Business Pvt Ltd",
+        businessName: "Sahara PVT LTD",
         gstin: "27AAAAA0000A1Z5",
         registeredAddress:
-          "123 Business Park, Corporate Avenue, Mumbai, Maharashtra - 400001",
+          "123, Sahara Street, Bhalej Road, Anand, 388001, Gujarat",
       };
 
       // Simulating API delay
@@ -519,7 +519,7 @@ const SupplierRegister: React.FC = () => {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button
+                      {/* <Button
                         size="small"
                         onClick={() => sendOtp("mobile")}
                         disabled={sendingOtp || mobileVerified}
@@ -535,7 +535,7 @@ const SupplierRegister: React.FC = () => {
                         ) : (
                           "Verify"
                         )}
-                      </Button>
+                      </Button> */}
                     </InputAdornment>
                   ),
                 }}
@@ -633,7 +633,7 @@ const SupplierRegister: React.FC = () => {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button
+                      {/* <Button
                         size="small"
                         onClick={() => sendOtp("email")}
                         disabled={sendingOtp || emailVerified}
@@ -649,7 +649,7 @@ const SupplierRegister: React.FC = () => {
                         ) : (
                           "Verify"
                         )}
-                      </Button>
+                      </Button> */}
                     </InputAdornment>
                   ),
                 }}
