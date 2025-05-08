@@ -188,7 +188,8 @@ public class BuyerController {
                             i.getDueDate().toString(),
                             i.getStatus().toString(),
                             companyName,
-                            encodedPdf
+                            encodedPdf,
+                            i.isFactoring()
                     );
                 })
                 .collect(Collectors.toList());
@@ -219,7 +220,8 @@ public class BuyerController {
                             i.getUploadDate().toString(),
                             i.getStatus().toString(),
                             company,
-                            encodedPdf
+                            encodedPdf,
+                            i.isFactoring()
                     );
                 })
                 .collect(Collectors.toList());
@@ -249,7 +251,8 @@ public class BuyerController {
                             i.getUploadDate().toString(),
                             i.getStatus().toString(),
                             company,
-                            encodedPdf
+                            encodedPdf,
+                            i.isFactoring()
                     );
                 })
                 .collect(Collectors.toList());

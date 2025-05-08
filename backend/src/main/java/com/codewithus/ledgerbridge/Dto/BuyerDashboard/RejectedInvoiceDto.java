@@ -15,4 +15,5 @@ public class RejectedInvoiceDto {
     private String status;
     private String sellerCompany;
     private String invoiceDocument;
+    private boolean factoring;
 }

@@ -15,4 +15,5 @@ public class ApprovedInvoiceDto {
     private String status;
     private String sellerCompany;
     private String invoiceDocument;
+    private boolean factoring;
 }
