@@ -1,196 +1,233 @@
-import { useState } from 'react';
-import { 
-  FileText, 
-  Eye, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle,
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Eye,
+  CheckCircle,
+  XCircle,
   Download,
   Calendar,
   DollarSign,
-  Clock,
-  Building,
-  FileCheck
 } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'sonner';
+
+interface BuyerFormData {
+  userName: string | null;
+  // …other fields
+}
+interface BackendInvoiceDto {
+  id: string;
+  seller: string;           // username
+  amount: string;           // e.g. "₹1,000"
+  dueDate: string;          // e.g. "2025-05-07"
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  invoiceDocument: string;  // Base64 PDF payload
+}
 
 interface Invoice {
   id: string;
-  invoiceNumber: string;
-  seller: {
-    name: string;
-    gstin: string;
-  };
-  amount: number;
-  issueDate: string;
+  seller: { name: string };
+  amount: string;
   dueDate: string;
   status: 'pending' | 'approved' | 'rejected';
-  pdfUrl: string;
-  description: string;
-  items: {
-    description: string;
-    quantity: number;
-    rate: number;
-    amount: number;
-  }[];
+  invoiceDocument: string;
 }
 
+const api = axios.create({
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/buyers`,
+  headers: { "Content-Type": "application/json" },
+});
+
 const InvoiceApproval = () => {
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [pending, setPending] = useState<Invoice[]>([]);
+  const [approved, setApproved] = useState<Invoice[]>([]);
+  const [rejected, setRejected] = useState<Invoice[]>([]);
+  const [filterStatus, setFilterStatus] = useState<'all'|'pending'|'approved'|'rejected'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice|null>(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [showRemarkModal, setShowRemarkModal] = useState(false);
   const [remark, setRemark] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [decisionType, setDecisionType] = useState<'approve' | 'reject' | null>(null);
+  const userString = sessionStorage.getItem("user");
+  const user = userString ? JSON.parse(userString) as BuyerFormData : null;
+  const buyerUsername = user?.userName || "";
 
-  // Mock data
-  const invoices: Invoice[] = [
-    {
-      id: '1',
-      invoiceNumber: 'INV-2025-001',
-      seller: {
-        name: 'Tech Manufacturing Ltd',
-        gstin: '27AAAAA0000A1Z5'
-      },
-      amount: 285000,
-      issueDate: '2025-05-01',
-      dueDate: '2025-06-15',
-      status: 'pending',
-      pdfUrl: '/invoices/INV-2025-001.pdf',
-      description: 'Industrial equipment supplies',
-      items: [
-        {
-          description: 'Industrial Motor X500',
-          quantity: 2,
-          rate: 75000,
-          amount: 150000
-        },
-        {
-          description: 'Control Panel P100',
-          quantity: 3,
-          rate: 45000,
-          amount: 135000
-        }
-      ]
-    },
-    // Add more mock invoices...
-  ];
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      const res = await api.get(`${buyerUsername}/dashboard`);
+      const { pendingInvoices, approvedInvoices, rejectedInvoices } = res.data;
+      setPending(pendingInvoices.map(normalize));
+      setApproved(approvedInvoices.map(normalize));
+      setRejected(rejectedInvoices.map(normalize));
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load dashboard data");
+    }
+  }, [buyerUsername]);
+  // map backend payload → UI model
+  const normalize = (dto: BackendInvoiceDto): Invoice => ({
+    id: dto.id,
+    seller: { name: dto.seller },
+    amount: dto.amount,
+    dueDate: dto.dueDate,
+    status: dto.status.toLowerCase() as Invoice['status'],
+    invoiceDocument: dto.invoiceDocument,
+  });
 
-  const handleApprove = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setShowRemarkModal(true);
-  };
+  useEffect(() => {
+    if (buyerUsername) {
+      fetchDashboardData();
+    }
+  }, [buyerUsername,fetchDashboardData]);
 
-  const handleReject = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setShowRemarkModal(true);
-  };
+  // consolidated + filter + search
+  const allInvoices = [...pending, ...approved, ...rejected];
+  const visible = allInvoices
+    .filter(inv => filterStatus === 'all' || inv.status === filterStatus)
+    .filter(inv =>
+      inv.id.includes(searchTerm) ||
+      inv.seller.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleApprove = (inv: Invoice) => {
+      setDecisionType('approve');
+      setSelectedInvoice(inv);
+      setShowRemarkModal(true);
+    };
+    
+    const handleReject = (inv: Invoice) => {
+      setDecisionType('reject');
+      setSelectedInvoice(inv);
+      setShowRemarkModal(true);
+    };
+    
 
   const submitDecision = async (decision: 'approve' | 'reject') => {
     if (!selectedInvoice || !remark) return;
-
+  
     try {
-      // API call would go here
-      console.log(`${decision}ing invoice:`, selectedInvoice.id, 'with remark:', remark);
+      // build the InvoiceActionDto body
+      const payload = {
+        buyerusername: buyerUsername,  // from session
+        remark: remark
+      };
+  
+      // call PATCH /api/invoices/{invoiceId}/{approve|reject}
+      await axios.patch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/invoices/${selectedInvoice.id}/${decision}`,
+        payload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+  
+      // on success, close modal & clear state; then refetch or optimistically update your lists
       setShowRemarkModal(false);
       setRemark('');
       setSelectedInvoice(null);
-    } catch (error) {
-      console.error('Error processing invoice:', error);
+      // e.g. refetch dashboard:
+      await fetchDashboardData();
+    } catch (err) {
+      console.error(err.response.data);
+      
+      toast.error("Failed to submit decision");
     }
   };
 
+  // PDF download helper
+  const downloadPdf = useCallback(() => {
+    if (!selectedInvoice?.invoiceDocument) return;
+    const byteChars = atob(selectedInvoice.invoiceDocument);
+    const bytes = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      bytes[i] = byteChars.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${selectedInvoice.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [selectedInvoice]);
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Invoice Approval</h1>
-        <p className="text-gray-600 mt-2">Review and approve invoices from your sellers</p>
-      </div>
-
-      {/* Filters and Search */}
+      {/* Header & Filters */}
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex gap-2">
-          {['all', 'pending', 'approved', 'rejected'].map((status) => (
+          {['all','pending','approved','rejected'].map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                ${filterStatus === status 
-                  ? 'bg-[#006A71] text-white' 
-                  : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filterStatus === status
+                  ? 'bg-[#006A71] text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </button>
           ))}
         </div>
-        <div className="w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Search invoices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006A71] focus:border-transparent"
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Search invoices..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full sm:w-64 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#006A71]"
+        />
       </div>
 
-      {/* Invoices Grid */}
+      {/* Invoice Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {invoices.map((invoice) => (
-          <div 
-            key={invoice.id}
-            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
-          >
+        {visible.map(inv => (
+          <div key={inv.id} className="bg-white rounded-xl p-6 shadow hover:shadow-lg transition">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="font-semibold text-lg text-gray-800">
-                  {invoice.invoiceNumber}
-                </h3>
-                <p className="text-gray-600">{invoice.seller.name}</p>
+                <h3 className="text-lg font-semibold">{inv.id}</h3>
+                <p className="text-gray-600">{inv.seller.name}</p>
               </div>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium
-                ${invoice.status === 'approved' ? 'bg-green-100 text-green-800' :
-                  invoice.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                  'bg-yellow-100 text-yellow-800'}`}
-              >
-                {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                inv.status === 'approved'
+                  ? 'bg-green-100 text-green-800'
+                  : inv.status === 'rejected'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
               </span>
             </div>
-
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center text-gray-600">
                 <DollarSign size={16} className="mr-2" />
-                <span>₹{invoice.amount.toLocaleString()}</span>
+                <span>{inv.amount}</span>
               </div>
               <div className="flex items-center text-gray-600">
                 <Calendar size={16} className="mr-2" />
-                <span>Due: {new Date(invoice.dueDate).toLocaleDateString()}</span>
+                <span>Due: {new Date(inv.dueDate).toLocaleDateString()}</span>
               </div>
             </div>
-
-            <div className="mt-6 flex gap-2">
+            <div className="mt-4 flex gap-2">
               <button
-                onClick={() => setShowPdfModal(true)}
-                className="flex-1 flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                onClick={() => { setSelectedInvoice(inv); setShowPdfModal(true); }}
+                className="flex-1 flex items-center justify-center px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
               >
-                <Eye size={16} className="mr-2" />
-                View PDF
+                <Eye size={16} className="mr-2" /> View
               </button>
-              {invoice.status === 'pending' && (
+              {inv.status === 'pending' && (
                 <>
                   <button
-                    onClick={() => handleApprove(invoice)}
-                    className="flex-1 flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={() => handleApprove(inv)}
+                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                   >
-                    <CheckCircle size={16} className="mr-2" />
-                    Approve
+                    <CheckCircle size={16} className="mr-2" /> Approve
                   </button>
                   <button
-                    onClick={() => handleReject(invoice)}
-                    className="flex-1 flex items-center justify-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    onClick={() => handleReject(inv)}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                   >
-                    <XCircle size={16} className="mr-2" />
-                    Reject
+                    <XCircle size={16} className="mr-2" /> Reject
                   </button>
                 </>
               )}
@@ -202,106 +239,65 @@ const InvoiceApproval = () => {
       {/* Remark Modal */}
       {showRemarkModal && selectedInvoice && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <h3 className="text-xl font-semibold mb-4">
-              {selectedInvoice.status === 'pending' ? 'Add Remark' : 'View Remark'}
+            {decisionType === 'approve' ? 'Approve Invoice' : 'Reject Invoice'}
             </h3>
             <textarea
               value={remark}
-              onChange={(e) => setRemark(e.target.value)}
-              placeholder="Enter your remarks..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006A71] focus:border-transparent mb-4"
+              onChange={e => setRemark(e.target.value)}
+              placeholder="Enter remarks..."
               rows={4}
+              className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#006A71] mb-4"
             />
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowRemarkModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
+              <button onClick={() => setShowRemarkModal(false)} className="px-4 py-2 text-gray-600">
                 Cancel
               </button>
-              <button
-                onClick={() => submitDecision('approve')}
-                className="px-4 py-2 bg-[#006A71] text-white rounded-lg hover:bg-[#005a61] transition-colors"
-              >
-                Submit
+              <button onClick={() => submitDecision(decisionType)} className="px-4 py-2 bg-[#006A71] text-white rounded-lg">
+              {decisionType === 'approve' ? 'Approve' : 'Reject'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* PDF Viewer Modal */}
+      {/* PDF Viewer & Download Modal */}
       {showPdfModal && selectedInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-start mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <div className="flex justify-between mb-4">
               <h3 className="text-xl font-semibold">Invoice Details</h3>
-              <button
-                onClick={() => setShowPdfModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
+              <button onClick={() => setShowPdfModal(false)} className="text-gray-500 hover:text-gray-700">
                 <XCircle size={24} />
               </button>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">Seller Information</h4>
-                <p className="text-gray-600">{selectedInvoice.seller.name}</p>
-                <p className="text-gray-600">GSTIN: {selectedInvoice.seller.gstin}</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">Invoice Details</h4>
-                <p className="text-gray-600">Invoice Number: {selectedInvoice.invoiceNumber}</p>
-                <p className="text-gray-600">Amount: ₹{selectedInvoice.amount.toLocaleString()}</p>
-                <p className="text-gray-600">Due Date: {new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
-              </div>
-            </div>
 
-            <div className="mb-6">
-              <h4 className="font-medium text-gray-800 mb-2">Items</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Description</th>
-                      <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">Quantity</th>
-                      <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">Rate</th>
-                      <th className="px-4 py-2 text-right text-sm font-medium text-gray-500">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedInvoice.items.map((item, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="px-4 py-2 text-sm text-gray-800">{item.description}</td>
-                        <td className="px-4 py-2 text-sm text-gray-800 text-right">{item.quantity}</td>
-                        <td className="px-4 py-2 text-sm text-gray-800 text-right">₹{item.rate.toLocaleString()}</td>
-                        <td className="px-4 py-2 text-sm text-gray-800 text-right">₹{item.amount.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-gray-50">
-                    <tr>
-                      <td colSpan={3} className="px-4 py-2 text-sm font-medium text-gray-800 text-right">Total</td>
-                      <td className="px-4 py-2 text-sm font-medium text-gray-800 text-right">
-                        ₹{selectedInvoice.amount.toLocaleString()}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
+            <p className="text-gray-600 mb-2"><strong>Invoice ID:</strong> {selectedInvoice.id}</p>
+            <p className="text-gray-600 mb-2"><strong>Seller:</strong> {selectedInvoice.seller.name}</p>
+            <p className="text-gray-600 mb-2"><strong>Amount:</strong> {selectedInvoice.amount}</p>
+            <p className="text-gray-600 mb-6"><strong>Due Date:</strong> {new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
 
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => window.open(selectedInvoice.pdfUrl, '_blank')}
-                className="px-4 py-2 flex items-center text-[#006A71] hover:text-[#005a61]"
-              >
-                <Download size={16} className="mr-2" />
-                Download PDF
-              </button>
-            </div>
+            {selectedInvoice.invoiceDocument ? (
+              <div className="border rounded-lg overflow-hidden mb-4" style={{ height: 400 }}>
+                <embed
+                  src={`data:application/pdf;base64,${selectedInvoice.invoiceDocument}`}
+                  type="application/pdf"
+                  width="100%"
+                  height="100%"
+                />
+              </div>
+            ) : (
+              <p className="text-red-500 mb-4">No invoice document available.</p>
+            )}
+
+            <button
+              onClick={downloadPdf}
+              className="flex items-center px-4 py-2 border rounded-lg hover:bg-gray-100 transition"
+            >
+              <Download size={16} className="mr-2" />
+              Download PDF
+            </button>
           </div>
         </div>
       )}

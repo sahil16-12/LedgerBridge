@@ -137,17 +137,18 @@ const LoginPage = () => {
         // Store user and role in localStorage
         sessionStorage.setItem("user", JSON.stringify(typedUser));
         sessionStorage.setItem("role", role);
-        if (role === "SELLER") {
+        if (role == "SUPPLIER") {
           navigate("/seller/dashboard");
         }
-        navigate("/temp");
-
-        // else if (role === "BUYER") {
-        //   navigate("/buyer/dashboard");
-        // } else {
-        //   // Default navigation if the role doesn't match expected ones
-        //   navigate("/dashboard");
-        // }
+        else if (role == "BUYER") {
+          navigate("/buyer/dashboard");
+        }else if (role == "FINANCIER") {
+          navigate("/buyer/dashboard");
+        }
+         else {
+          // Default navigation if the role doesn't match expected ones
+          navigate("/dashboard");
+        }
       } else {
         alert("Login failed: " + response.data);
       }
@@ -210,7 +211,7 @@ const LoginPage = () => {
               description: "Receive funds within 24-48 hours",
             },
             {
-              image: "/slider3.jpg",
+              image: "/Car2.jpeg",
               title: "Secure Platform",
               description: "Bank-grade security for your transactions",
             },

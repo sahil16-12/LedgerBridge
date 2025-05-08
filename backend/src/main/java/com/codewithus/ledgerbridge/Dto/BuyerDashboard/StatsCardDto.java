@@ -1,6 +1,13 @@
+package com.codewithus.ledgerbridge.Dto.BuyerDashboard;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
-package com.codewithus.ledgerbridge.Dto;
+import lombok.NoArgsConstructor;
+
+
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class StatsCardDto {
     private String title;
     private String value;
