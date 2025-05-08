@@ -1,3 +1,4 @@
+
 import { Routes, Route } from 'react-router-dom';
 import SupplierRegister from '../pages/RegisterSupplier';
 import BuyerRegister from '../pages/RegisterBuyer';
@@ -14,9 +15,12 @@ import BuyerDashboard from '../pages/buyer/BuyerDashboard';
 import InvoiceApproval from '../pages/buyer/InvoiceApproval';
 import InvoiceStatusPage from '../pages/buyer/InvoiceStatus';
 
+
 export const AppRoute = () => (
   <Routes>
     <Route path="/" element={<LandingPage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/temp" element={<Temp />} />
     <Route path="/register/supplier" element={<SupplierRegister />} />
     <Route path="/register/buyer" element={<BuyerRegister />} />
     <Route path="/register/financier" element={<FinancierRegister />} />
@@ -26,10 +30,16 @@ export const AppRoute = () => (
     <Route path="/seller" element={<SellerLayout />}>
       <Route path="dashboard" element={<SellerDashboard />} />
       <Route path="upload" element={<UploadInvoice />} />
-      <Route path="bids" element={<BidsAndOffers/>} />
+      <Route path="bids" element={<BidsAndOffers />} />
       {/* <Route path="invoices" element={<div>Invoices Page</div>} /> */}
       <Route path="settings" element={<div>Settings Page</div>} />
     </Route>
+<<<<<<< HEAD
+    <Route path="/verify" element={<VerificationPage />} />
+    <Route path="*" element={<LandingPage />} />
+  </Routes>
+);
+=======
 
      {/* Buyer Routes */}
      <Route path="/buyer" element={<BuyerLayout />}>
@@ -42,3 +52,4 @@ export const AppRoute = () => (
   </Routes>
 );
 
+>>>>>>> 40f14a79197f05dc33aa877a325fc6427481658f

@@ -7,7 +7,6 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useUserContext } from "../context/UserContext";
 
-
 interface BuyerFormData {
   userName: string | null;
   buyerPan: string;
@@ -47,7 +46,6 @@ interface FinancierFormData {
   confirmPassword: string;
 }
 
-
 interface SupplierFormData {
   userName: string | null;
   businessPan: string;
@@ -68,9 +66,7 @@ interface SupplierFormData {
   confirmPassword: string;
 }
 
-
 type User = SupplierFormData | FinancierFormData | BuyerFormData;
-
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/auth`,
@@ -81,14 +77,12 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [captcha, setCaptcha] = useState("");
-  const { setUser, setRole, setAuth, auth } = useUserContext();
-
+  const { setUser, setRole, setAuth } = useUserContext();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     captchaInput: "",
   });
-
 
   // Carousel settings
   const sliderSettings = {
@@ -98,7 +92,7 @@ const LoginPage = () => {
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 1000,
+    autoplaySpeed: 5000,
     arrows: false,
     customPaging: (i: number) => (
       <div className="w-2 h-2 rounded-full bg-white/50 hover:bg-white/80 transition-all duration-200" />
@@ -107,13 +101,11 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-
     if (formData.captchaInput !== captcha) {
       alert("Invalid captcha!");
       generateCaptcha();
       return;
     }
-
 
     setLoading(true);
     try {
@@ -123,43 +115,39 @@ const LoginPage = () => {
         password: formData.password,
       });
 
-      console.log(response)
       const { role, user } = response.data;
       // Check if the response is successful
       if (response.status === 200) {
         let typedUser: User;
 
-
-        if (role == "SUPPLIER") {
+        if (role === "SUPPLIER") {
           typedUser = user as SupplierFormData;
-        } else if (role == "FINANCIER") {
+        } else if (role === "FINANCIER") {
           typedUser = user as FinancierFormData;
-        } else if (role == "BUYER") {
+        } else if (role === "BUYER") {
           typedUser = user as BuyerFormData;
         } else {
           throw new Error("Unknown role");
         }
 
-        console.log("TYPE OF USER");
         console.log(typeof typedUser);
         setUser(typedUser);
         setRole(role);
         setAuth(true);
         // Store user and role in localStorage
-        localStorage.setItem("user", JSON.stringify(typedUser));
-        localStorage.setItem("role", role);
-        if (role == "SUPPLIER") {
+        sessionStorage.setItem("user", JSON.stringify(typedUser));
+        sessionStorage.setItem("role", role);
+        if (role === "SELLER") {
           navigate("/seller/dashboard");
         }
-        else if (role == "BUYER") {
-          navigate("/buyer/dashboard");
-        }else if (role == "FINANCIER") {
-            navigate("/financier/dashboard");
-          }  
-        else {
-          // Default navigation if the role doesn't match expected ones
-          navigate("/dashboard");
-        }
+        navigate("/temp");
+
+        // else if (role === "BUYER") {
+        //   navigate("/buyer/dashboard");
+        // } else {
+        //   // Default navigation if the role doesn't match expected ones
+        //   navigate("/dashboard");
+        // }
       } else {
         alert("Login failed: " + response.data);
       }
@@ -172,7 +160,6 @@ const LoginPage = () => {
     }
   };
 
-
   // Generate random captcha
   const generateCaptcha = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -183,11 +170,9 @@ const LoginPage = () => {
     setCaptcha(result);
   };
 
-
   useEffect(() => {
     generateCaptcha();
   }, []);
-
 
   //   const handleSubmit = async (e: React.FormEvent) => {
   //     e.preventDefault();
@@ -196,7 +181,6 @@ const LoginPage = () => {
   //       generateCaptcha();
   //       return;
   //     }
-
 
   //     setLoading(true);
   //     try {
@@ -208,7 +192,6 @@ const LoginPage = () => {
   //       setLoading(false);
   //     }
   //   };
-
 
   return (
     <div className="min-h-screen flex">
@@ -227,7 +210,7 @@ const LoginPage = () => {
               description: "Receive funds within 24-48 hours",
             },
             {
-              image: "/Car2.jpeg",
+              image: "/slider3.jpg",
               title: "Secure Platform",
               description: "Bank-grade security for your transactions",
             },
@@ -248,7 +231,6 @@ const LoginPage = () => {
         </Slider>
       </div>
 
-
       {/* Right Section - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
         <div className="w-full max-w-md space-y-8">
@@ -258,7 +240,6 @@ const LoginPage = () => {
             </h1>
             <p className="text-gray-600">Login to access your account</p>
           </div>
-
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             {/* Email Field */}
@@ -273,12 +254,11 @@ const LoginPage = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#006A71]/20
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#006A71]/20 
            focus:border-[#006A71] transition-all duration-200"
                 placeholder="Enter your email or username"
               />
             </div>
-
 
             {/* Password Field */}
             <div>
@@ -293,7 +273,7 @@ const LoginPage = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#006A71]/20
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#006A71]/20 
                            focus:border-[#006A71] transition-all duration-200"
                   placeholder="Enter your password"
                 />
@@ -307,7 +287,6 @@ const LoginPage = () => {
               </div>
             </div>
 
-
             {/* Captcha Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -316,7 +295,7 @@ const LoginPage = () => {
               <div className="flex items-center space-x-4 mb-2">
                 <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3">
                   <div
-                    className="font-mono text-lg font-bold tracking-wider text-gray-700
+                    className="font-mono text-lg font-bold tracking-wider text-gray-700 
                                 select-none italic bg-gray-50 py-1 text-center"
                   >
                     {captcha}
@@ -325,7 +304,7 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={generateCaptcha}
-                  className="p-3 rounded-lg border border-gray-200 hover:bg-gray-50
+                  className="p-3 rounded-lg border border-gray-200 hover:bg-gray-50 
                            transition-colors duration-200"
                 >
                   <RefreshCw size={20} className="text-gray-500" />
@@ -338,25 +317,23 @@ const LoginPage = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, captchaInput: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 
                          focus:ring-[#006A71]/20 focus:border-[#006A71] transition-all duration-200"
                 placeholder="Enter captcha text"
               />
             </div>
-
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
               className="w-full bg-[#006A71] text-white py-3 rounded-xl font-medium
-                       hover:bg-[#005a61] focus:ring-4 focus:ring-[#006A71]/20
+                       hover:bg-[#005a61] focus:ring-4 focus:ring-[#006A71]/20 
                        transition-all duration-200 flex items-center justify-center space-x-2"
             >
               <span>Login to Dashboard</span>
               <ArrowRight size={20} />
             </button>
-
 
             {/* Links */}
             <div className="flex items-center justify-between text-sm">
@@ -376,6 +353,5 @@ const LoginPage = () => {
     </div>
   );
 };
-
 
 export default LoginPage;
